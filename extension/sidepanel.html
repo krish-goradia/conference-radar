@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conference Radar</title>
+</head>
+<body>
+    <h2 id = "conference_name"></h2>
+    <label for="add_field"> Add New Field </label>
+    <select id="add_field">
+        <option value="" disabled selected>Select a field...</option> 
+        <option value = "sub_deadline"> Submission Deadline </option>
+        <option value = "confer_place"> Conference Place </option>
+    </select>
+    <br>
+    <div id = "field_container"></div>
+    <br>
+    <p id ="result"> </p>
+    <button id="submitbtn" disabled>Submit </button>
+    <script src="sidepanel.js"> </script>
+</body>
+</html>
