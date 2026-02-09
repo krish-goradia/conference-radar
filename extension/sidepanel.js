@@ -92,8 +92,13 @@ btnContainer.addEventListener("click", async(eve)=>{
     //     alert("This field has been added");
     //     return;
     // }
+    const buttons = btnContainer.querySelectorAll("button");
+    buttons.forEach(b=>{
+        b.disabled = true;
+    })
     pending_fields[fieldkey] = {selected:false};
     addnewfieldtoUI(fieldkey,mode);
+
 
     const [tab] = await chrome.tabs.query({active:true,currentWindow:true});
     
@@ -143,6 +148,10 @@ chrome.runtime.onMessage.addListener((msg)=>{
     window.currentConf.pending_fields[fieldkey].selected=true;
     const div = document.getElementById(`field-${fieldkey}`);
     const mode = msg.mode;
+    const buttons = btnContainer.querySelectorAll("button");
+    buttons.forEach(b=>{
+        b.disabled=false;
+    })
     if(div && mode == "new") div.textContent = FIELD_LABELS[fieldkey] + "SELECTION DONE ✅";
     if(div && mode == "edit") div.textContent = FIELD_LABELS[fieldkey] + "RESELECTION DONE ✅";
 

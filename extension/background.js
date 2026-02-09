@@ -54,4 +54,6 @@ chrome.runtime.onMessage.addListener(async (msg,sender)=>{
 chrome.runtime.onMessage.addListener(async (msg) => {
     if(msg.type !== "SUBMIT_CONFERENCE") return;
     console.log("Conference submitted:", msg.conf_id);
+    // const data = await chrome.storage.local.get(msg.conf_id);
+    // console.log(data);
 });
