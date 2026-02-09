@@ -23,6 +23,7 @@ chrome.runtime.onMessage.addListener(async (msg,sender,send_resp)=>{
         existing_fields: conf_data ? conf_data.fields : {},
         meta: conf_data ? conf_data.meta : null  
     })
+    return true;
 
 })
 
@@ -47,9 +48,11 @@ chrome.runtime.onMessage.addListener(async (msg,sender)=>{
         type:"FIELD_ADDED",
         fieldkey:msg.fieldkey
     });
+    return true;
 
 })
 chrome.runtime.onMessage.addListener(async (msg) => {
     if(msg.type !== "SUBMIT_CONFERENCE") return;
     console.log("Conference submitted:", msg.conf_id);
+    return true;
 });

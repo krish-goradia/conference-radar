@@ -1,3 +1,7 @@
+const fieldSelect = document.getElementById("add_field");
+const fieldContainer = document.getElementById("field_container");
+const submitbtn = document.getElementById("submitbtn");
+
 async function panelopen(){
     const [tab] = await chrome.tabs.query({active:true,currentWindow:true});
 
@@ -7,7 +11,8 @@ async function panelopen(){
     });
 }
 
-panelopen();
+setTimeout(panelopen,100);
+
 
 chrome.runtime.onMessage.addListener((msg)=>{
     if(msg.type != "CONFERENCE_READY") return;
@@ -46,9 +51,7 @@ function showfieldUI(fieldkey,label,isDone){
     div.textContent = label + (isDone ? " DONE ✅" : "");
     fieldContainer.appendChild(div);
 }
-const fieldSelect = document.getElementById("add_field");
-const fieldContainer = document.getElementById("field_container");
-const submitbtn = document.getElementById("submitbtn");
+
 
 fieldSelect.addEventListener("change", async(eve)=>{
     const fieldkey = eve.target.value;
@@ -63,9 +66,10 @@ fieldSelect.addEventListener("change", async(eve)=>{
 
     const [tab] = await chrome.tabs.query({active:true,currentWindow:true});
     chrome.tabs.sendMessage(tab.id,{
-        type: "START_SELECTION",
-        fieldkey
-    });
+            type: "START_SELECTION",
+            fieldkey
+        });
+    
     fieldSelect.value = "";
 
 })
