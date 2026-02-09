@@ -8,11 +8,14 @@
 <body>
     <h2 id = "conference_name"></h2>
     <label for="add_field"> Add New Field </label>
-    <select id="add_field">
-        <option value="" disabled selected>Select a field...</option> 
-        <option value = "sub_deadline"> Submission Deadline </option>
-        <option value = "confer_place"> Conference Place </option>
-    </select>
+    <div id = "btn_container">
+        <label> Paper Deadline </label>
+        <button id = "paper_deadline"> SELECT </button>
+        <br>
+        <label> Conference Place </label>
+        <button id = "confer_place"> SELECT</button>
+    </div>
+    
     <br>
     <div id = "field_container"></div>
     <br>

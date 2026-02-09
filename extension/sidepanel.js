@@ -1,6 +1,8 @@
-const fieldSelect = document.getElementById("add_field");
+
+const btnContainer = document.getElementById("btn_container");
 const fieldContainer = document.getElementById("field_container");
 const submitbtn = document.getElementById("submitbtn");
+let currenttabid = null;
 
 async function panelopen(){
     const [tab] = await chrome.tabs.query({active:true,currentWindow:true});
@@ -12,7 +14,22 @@ async function panelopen(){
 }
 
 setTimeout(panelopen,100);
+chrome.tabs.onActivated.addListener(async(activeinfo)=>{
+    currenttabid = activeinfo.tabId;
+    chrome.runtime.sendMessage({
+        type:"PANEL_OPEN",
+        tabId: currenttabid
+    })
+})
 
+chrome.tabs.onUpdated.addListener(async(tabId,changeinfo,tab)=>{
+    if(tabId == currenttabid &&changeinfo.url){
+        chrome.runtime.sendMessage({
+            type:"PANEL_OPEN",
+            tabId: tabId
+        })
+    }
+})
 
 chrome.runtime.onMessage.addListener((msg)=>{
     if(msg.type != "CONFERENCE_READY") return;
@@ -32,14 +49,12 @@ chrome.runtime.onMessage.addListener((msg)=>{
 });
 
 function showInitialUI(isNew,existing_fields,meta){
+    fieldContainer.innerHTML = "";
     if(!isNew){
         for(let fieldkey in existing_fields){
             const field = existing_fields[fieldkey]
             showfieldUI(fieldkey,field.label,true);
         }
-    }
-    else{
-        document.getElementById("field_container").innerHTML = "";
     }
     if(meta){
         document.getElementById("conference_name").textContent = meta.name;
@@ -53,9 +68,12 @@ function showfieldUI(fieldkey,label,isDone){
 }
 
 
-fieldSelect.addEventListener("change", async(eve)=>{
-    const fieldkey = eve.target.value;
+btnContainer.addEventListener("click", async(eve)=>{
+    const btn = eve.target.closest("button");
+    if(!btn) return;
+    const fieldkey = btn.id;
     if(!fieldkey) return;
+    
     const {existing_fields,pending_fields} = window.currentConf;
     if(existing_fields[fieldkey] || pending_fields[fieldkey]){
         alert("This field has been added");
@@ -65,13 +83,27 @@ fieldSelect.addEventListener("change", async(eve)=>{
     addnewfieldtoUI(fieldkey);
 
     const [tab] = await chrome.tabs.query({active:true,currentWindow:true});
-    chrome.tabs.sendMessage(tab.id,{
+    
+    try {
+        await chrome.tabs.sendMessage(tab.id, {
             type: "START_SELECTION",
             fieldkey
         });
-    
-    fieldSelect.value = "";
-
+    } catch (error) {
+        try {
+            await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                files: ['content.js']
+            });
+            await new Promise(resolve => setTimeout(resolve, 100));
+            await chrome.tabs.sendMessage(tab.id, {
+                type: "START_SELECTION",
+                fieldkey
+            });
+        } catch (injectError) {
+            alert(`Error: ${injectError.message}`);
+        }
+    }
 })
 
 function addnewfieldtoUI(fieldkey){

@@ -1,15 +1,41 @@
-let currentfieldkey = null;
+(function(){
 
-chrome.runtime.onMessage.addListener((msg)=>{
-    if(msg.type !== "START_SELECTION") return;
-    currentfieldkey = msg.fieldkey;
-    enableclickget();
+if (window.alreadycontentpresent) {
+    return;
+}
+window.alreadycontentpresent= true;
+
+let currentfieldkey = null;
+let listenersActive = false;
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    if (msg.type === "START_SELECTION") {
+        currentfieldkey = msg.fieldkey;
+        enableclickget();
+    }
 })
 
 function enableclickget(){
+    if (listenersActive) {
+        return;
+    }
+    listenersActive = true;
+    document.body.style.cursor = "crosshair";
     document.addEventListener("click",onelementclick,true);
     document.addEventListener("mouseover",onhoveringelement,true);
     document.addEventListener("mouseout",onunhoveringelement,true);
+}
+
+function disableclickget(){
+    if (!listenersActive) {
+        return;
+    }
+    listenersActive = false;
+    document.body.style.cursor = "";
+    if(previoushovered) previoushovered.style.outline = "";
+    document.removeEventListener("click",onelementclick,true);
+    document.removeEventListener("mouseover",onhoveringelement,true);
+    document.removeEventListener("mouseout",onunhoveringelement,true);
 }
 
 let previoushovered = null;
@@ -25,9 +51,7 @@ function onelementclick(e){
     e.preventDefault();
     e.stopPropagation();
     if(e.target) e.target.style.outline = "";
-    document.removeEventListener("click",onelementclick,true);
-    document.removeEventListener("mouseover",onhoveringelement,true);
-    document.removeEventListener("mouseout",onunhoveringelement,true);
+    disableclickget();
 
     const xpath = getxpath(e.target);
     chrome.runtime.sendMessage({
@@ -56,3 +80,5 @@ function getxpath(element){
     } 
     return null;
 }
+
+})();
