@@ -33,6 +33,7 @@ chrome.runtime.onMessage.addListener(async (msg,sender)=>{
     const confer_id = url.hostname+url.pathname;
     const data = await chrome.storage.local.get(confer_id);
     const conf = data[confer_id] || {fields:{},meta:{}};
+    const mode = msg.mode;
 
     conf.fields[msg.fieldkey]={
         ...conf.fields[msg.fieldkey],
@@ -45,7 +46,8 @@ chrome.runtime.onMessage.addListener(async (msg,sender)=>{
     await chrome.storage.local.set({[confer_id]:conf});
     chrome.runtime.sendMessage({
         type:"FIELD_ADDED",
-        fieldkey:msg.fieldkey
+        fieldkey:msg.fieldkey,
+        mode
     });
 
 })

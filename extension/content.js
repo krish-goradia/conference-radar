@@ -7,11 +7,13 @@ window.alreadycontentpresent= true;
 
 let currentfieldkey = null;
 let listenersActive = false;
-
+let mode = null;
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg.type === "START_SELECTION") {
         currentfieldkey = msg.fieldkey;
+        mode = msg.mode;
         enableclickget();
+        
     }
 })
 
@@ -57,28 +59,27 @@ function onelementclick(e){
     chrome.runtime.sendMessage({
         type:"FIELD_SELECTED",
         fieldkey: currentfieldkey,
-        xpath:xpath
+        xpath:xpath,
+        mode
     });
 
     currentfieldkey = null;
 }
 
 function getxpath(element){
-    if(element.id) return `//*[@id="${element.id}"]`;
-    if(element === document.body) return '/html/body';
-     
-    let cnt = 0;
-    const siblings = element.parentNode.childNodes;
-    for(let i = 0;i<siblings.length;i++){
-        const sib = siblings[i];
-        if(sib === element){
-            return getxpath(element.parentNode) + "/" + element.tagName.toLowerCase() + `[${cnt+1}]`;
-        }
-        if(sib.nodeType === 1 && sib.tagName === element.tagName){
-            cnt++;
-        }
-    } 
-    return null;
+    let path = "";
+    let current = element;
+    while(current && current.nodeType===1){
+        const parent = current.parentNode;
+        const siblings = Array.from(parent.children).filter(e=> e.tagName === current.tagName);
+        const index = siblings.indexOf(current)+1;
+        const segment = current.tagName.toLowerCase() + `[${index}]`;
+        path = segment + (path?"/"+path : "");
+        const xpath = "//"+path;
+        const result = document.evaluate(xpath,document,null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null);
+        if(result.snapshotLength===1) return xpath;
+        current = parent;
+    }
+    return "//" + path;
 }
-
 })();

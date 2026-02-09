@@ -4,6 +4,12 @@ const fieldContainer = document.getElementById("field_container");
 const submitbtn = document.getElementById("submitbtn");
 let currenttabid = null;
 
+const FIELD_LABELS = {
+    "confer_place" : "Conference Place",
+    "paper_deadline": "Paper Deadline",
+    "abs_deadline": "Abstract Deadline"
+}
+
 async function panelopen(){
     const [tab] = await chrome.tabs.query({active:true,currentWindow:true});
 
@@ -63,8 +69,15 @@ function showInitialUI(isNew,existing_fields,meta){
 function showfieldUI(fieldkey,label,isDone){
     const div = document.createElement("div");
     div.id = `field-${fieldkey}`;
-    div.textContent = label + (isDone ? " DONE ✅" : "");
+    div.textContent = FIELD_LABELS[label] + (isDone ? ": SELECTION DONE ✅" : "");
     fieldContainer.appendChild(div);
+    if(isDone){
+        const btn = btnContainer.querySelector(`#${fieldkey}`);
+        if(btn){
+            btn.textContent = "RESELECT";
+            btn.dataset.mode = "edit"
+        }
+    }
 }
 
 
@@ -73,21 +86,22 @@ btnContainer.addEventListener("click", async(eve)=>{
     if(!btn) return;
     const fieldkey = btn.id;
     if(!fieldkey) return;
-    
+    const mode = btn.dataset.mode;
     const {existing_fields,pending_fields} = window.currentConf;
-    if(existing_fields[fieldkey] || pending_fields[fieldkey]){
-        alert("This field has been added");
-        return;
-    }
+    // if(existing_fields[fieldkey] || pending_fields[fieldkey]){
+    //     alert("This field has been added");
+    //     return;
+    // }
     pending_fields[fieldkey] = {selected:false};
-    addnewfieldtoUI(fieldkey);
+    addnewfieldtoUI(fieldkey,mode);
 
     const [tab] = await chrome.tabs.query({active:true,currentWindow:true});
     
     try {
         await chrome.tabs.sendMessage(tab.id, {
             type: "START_SELECTION",
-            fieldkey
+            fieldkey,
+            mode
         });
     } catch (error) {
         try {
@@ -98,7 +112,8 @@ btnContainer.addEventListener("click", async(eve)=>{
             await new Promise(resolve => setTimeout(resolve, 100));
             await chrome.tabs.sendMessage(tab.id, {
                 type: "START_SELECTION",
-                fieldkey
+                fieldkey,
+                mode
             });
         } catch (injectError) {
             alert(`Error: ${injectError.message}`);
@@ -106,11 +121,20 @@ btnContainer.addEventListener("click", async(eve)=>{
     }
 })
 
-function addnewfieldtoUI(fieldkey){
-    const div = document.createElement("div");
-    div.id = `field-${fieldkey}`;
-    div.textContent = fieldkey + "(selecting in progress...)";
-    fieldContainer.appendChild(div);
+function addnewfieldtoUI(fieldkey,mode){
+    if(mode == "new"){
+        const div = document.createElement("div");
+        div.id = `field-${fieldkey}`;
+        div.textContent = FIELD_LABELS[fieldkey] + " (selecting in progress...)";
+        fieldContainer.appendChild(div);
+    }
+    if(mode == "edit"){
+        const result = fieldContainer.querySelector(`#field-${fieldkey}`)
+        if(result){
+            result.textContent = FIELD_LABELS[fieldkey] + " (reselecting in progress...)";
+        }
+    }
+    
 }
 
 chrome.runtime.onMessage.addListener((msg)=>{
@@ -118,7 +142,10 @@ chrome.runtime.onMessage.addListener((msg)=>{
     const {fieldkey} = msg;
     window.currentConf.pending_fields[fieldkey].selected=true;
     const div = document.getElementById(`field-${fieldkey}`);
-    if(div) div.textContent = fieldkey + "DONE ✅";
+    const mode = msg.mode;
+    if(div && mode == "new") div.textContent = FIELD_LABELS[fieldkey] + "SELECTION DONE ✅";
+    if(div && mode == "edit") div.textContent = FIELD_LABELS[fieldkey] + "RESELECTION DONE ✅";
+
 
     checkreadyforsubmit();
 })
