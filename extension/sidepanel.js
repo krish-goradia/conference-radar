@@ -152,8 +152,12 @@ chrome.runtime.onMessage.addListener((msg)=>{
     buttons.forEach(b=>{
         b.disabled=false;
     })
-    if(div && mode == "new") div.textContent = FIELD_LABELS[fieldkey] + "SELECTION DONE ✅";
-    if(div && mode == "edit") div.textContent = FIELD_LABELS[fieldkey] + "RESELECTION DONE ✅";
+    if(div && mode == "new"){
+        div.textContent = FIELD_LABELS[fieldkey] + ": SELECTION DONE ✅";
+        btnContainer.querySelector(`#${fieldkey}`).dataset.mode = "edit";
+        btnContainer.querySelector(`#${fieldkey}`).textContent = "RESELECT"
+    }
+    if(div && mode == "edit") div.textContent = FIELD_LABELS[fieldkey] + ": RESELECTION DONE ✅";
 
 
     checkreadyforsubmit();
