@@ -149,12 +149,12 @@ chrome.runtime.onMessage.addListener((msg)=>{
         b.disabled=false;
     })
     if(div && mode == "new"){
-        div.textContent ="Selected ✅";
+        div.textContent ="Selected";
         btnContainer.querySelector(`#${fieldkey}`).dataset.mode = "edit";
         const action = btnContainer.querySelector(`#${fieldkey} .action`);
         if(action) action.textContent = "Click to reselect";
     }
-    if(div && mode == "edit") div.textContent = "Reselected ✅";
+    if(div && mode == "edit") div.textContent = "Reselected";
 
 
     checkreadyforsubmit();

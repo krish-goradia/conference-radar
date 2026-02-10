@@ -103,7 +103,7 @@ body.dark select {
 
 .field-label {
   font-size: 12px;
-  opacity: 0.8;
+  opacity: 1s;
 }
 
 .field-row input {
