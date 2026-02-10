@@ -1,26 +1,110 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conference Radar</title>
+  <meta charset="UTF-8">
+  <title>Conference Manager</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <h2 id = "conference_name"></h2>
-    <label for="add_field"> Add New Field </label>
-    <div id = "btn_container">
-        <label> Paper Deadline </label>
-        <button id = "paper_deadline" data-mode = "new"> SELECT </button>
-        <br>
-        <label> Conference Place </label>
-        <button id = "confer_place" data-mode = "new"> SELECT</button>
+
+<body class="light">
+
+<div class="container">
+
+  <div class="header">
+    <div>
+      <h1>Add Conference</h1>
     </div>
-    
-    <br>
-    <div id = "field_container"></div>
-    <br>
-    <p id ="result"> </p>
-    <button id="submitbtn" disabled>Submit </button>
-    <script src="sidepanel.js"> </script>
+
+    <label class="switch">
+      <input type="checkbox" id="themeToggle">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+
+  <div class="card">
+    <h2>Conference Meta</h2>
+
+    <div class="field-row">
+      <span class="field-label">Short Title</span>
+      <input type="text" id="shortTitle">
+    </div>
+
+    <div class="field-row">
+      <span class="field-label">Long Title</span>
+      <input type="text" id="longTitle">
+    </div>
+
+    <div class="field-row">
+      <span class="field-label">URL</span>
+      <p class="field-value" id="confUrlDisplay">—</p>
+    </div>
+
+    <div class="field-row">
+      <span class="field-label">Research Domain</span>
+      <div class="autocomplete">
+        <input type="text" id="research_domain" placeholder="Search or add domain" spellcheck="false" autocomplete="off">
+        <div class="suggestions" id="domainSuggestions"></div>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <span class="field-label">Keywords</span>
+      <div class="autocomplete">
+        <input type="text" id="keywords" placeholder="Search or add keywords" spellcheck="false" autocomplete="off">
+        <div class="suggestions" id="keywordSuggestions"></div>
+      </div>
+    </div>
+
+  </div>
+  <div class="card">
+    <h2>Conference Fields</h2>
+
+    <button class="select-row" id = "abs_deadline" data-mode="new">
+      <span>Abstract Deadline</span>
+      <span class="status">Not set</span>   
+    </button>
+
+    <div class="row">
+      <input type="text" placeholder="Abstract Time">
+      <select><option>--</option></select>
+    </div>
+
+    <button class="select-row" id = "paper_deadline" data-mode="new">
+      <span>Paper Deadline</span>
+      <span class="status">Not set</span>
+    </button>
+
+    <div class="row">
+      <input type="text" placeholder="Paper Time">
+      <select><option>--</option></select>
+    </div>
+
+    <button class="select-row" id = "confer_date" data-mode="new">
+      <span>Conference Date</span>
+      <span class="status">Not set</span>
+    </button>
+
+    <button class="select-row" id = "confer_time" data-mode="new">
+      <span>Conference Time</span>
+      <span class="status">Not set</span>
+    </button>
+
+    <button class="select-row" id = "confer_venue" data-mode="new">
+      <span>Conference Venue</span>
+      <span class="status">Not set</span>
+    </button>
+  </div>
+
+  <button class="primary-btn" id = "submitBtn">Save Conference</button>
+
+</div>
+
+<script>
+document.getElementById("themeToggle").addEventListener("change", () => {
+  document.body.classList.toggle("dark");
+});
+</script>
+
 </body>
 </html>
