@@ -219,6 +219,12 @@ body.dark .suggestions:not(:empty) {
   display: flex;
   justify-content: space-between;
   font-size: 12px;
+  cursor: pointer;
+}
+
+.mybutton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .select-left{
@@ -271,6 +277,12 @@ body.dark .mybutton {
   color: white;
   font-size: 13px;
   font-weight: 500;
+  cursor: pointer;
+}
+
+.primary-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 /* Theme toggle */

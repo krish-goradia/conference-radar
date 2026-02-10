@@ -1,6 +1,7 @@
 
 const btnContainer = document.getElementById("btn_container");
 const submitbtn = document.getElementById("submitBtn");
+const metafields = document.getElementById("_metafields");
 let currenttabid = null;
 
 const FIELD_LABELS = {
@@ -36,6 +37,7 @@ chrome.tabs.onUpdated.addListener(async(tabId,changeinfo,tab)=>{
     }
 })
 
+
 chrome.runtime.onMessage.addListener((msg)=>{
     if(msg.type !== "CONFERENCE_READY") return;
 
@@ -53,31 +55,52 @@ chrome.runtime.onMessage.addListener((msg)=>{
 
 });
 
+metafields.addEventListener("input",(e=>{
+    if(e.target.tagName == "INPUT"){
+        const id = e.target.id;
+        window.currentConf.meta[id] = e.target.value;
+    }
+}))
+
 function showInitialUI(isNew,existing_fields,meta){
     // Reset button states (buttons are static in HTML now)
     const div = document.getElementById("conf_URL");
     div.textContent = meta["URL"];
     if(!isNew){
         for(let fieldkey in existing_fields){
-            const field = existing_fields[fieldkey]
-            showfieldUI(fieldkey,field.label,true);
+            showfieldUI(fieldkey,"confer_details",true);
+        }
+        for(let metafield in meta){
+            const value = meta[metafield]
+            showfieldUI(metafield,"meta_details",true,value);
         }
     }
     // if(meta){
     //     document.getElementById("conference_name").textContent = meta.name;
     // }
 }
-function showfieldUI(fieldkey,label,isDone){
-    const div = document.querySelector(`#${fieldkey} .status`)
-    // div.id = `field-${fieldkey}`;
-    div.textContent = (isDone ? "Selected" : "Not Set");
-    //fieldContainer.appendChild(div);
-    if(isDone){
-        const btn = document.querySelector(`#${fieldkey}`);
-        if(btn){
-            btn.dataset.mode = "edit"
+function showfieldUI(fieldkey,type,isDone,value= null){
+    if(type === "confer_details"){
+        const div = document.querySelector(`#${fieldkey} .status`)
+        // div.id = `field-${fieldkey}`;
+        div.textContent = (isDone ? "Selected" : "Not Set");
+        //fieldContainer.appendChild(div);
+        if(isDone){
+            const btn = document.querySelector(`#${fieldkey}`);
+            if(btn){
+                btn.dataset.mode = "edit"
+            }
         }
     }
+    if(type === "meta_details"){
+        const div = document.getElementById(`${fieldkey}`)
+        const p = document.createElement("p");
+        p.className = "field_value";
+        p.id = div.id;
+        p.textContent = value;
+        div.replaceWith(p);
+    }
+
 }
 
 
@@ -162,11 +185,21 @@ chrome.runtime.onMessage.addListener((msg)=>{
 
 function checkreadyforsubmit(){
     const {pending_fields} = window.currentConf;
+    const conf_meta = window.currentConf.meta;
+    const meta_filled = Object.values(conf_meta).every(f=>f!== null && f.toString().trim()!== "");
     const done = Object.values(pending_fields).every(f=> f.selected == true);
-    submitbtn.disabled = !done;
+    submitbtn.disabled = !(done&&meta_filled);
+}
+
+function checkPresentFields(){
+    const pending_done = Object.values(window.currentConf.pending_fields).some(f=>f.selected == true)
+    const existing_done = Object.values(window.currentConf.existing_fields).length  > 0;
+    return pending_done || existing_done;
 }
 
 submitbtn.addEventListener("click",()=>{
+    const ready = checkPresentFields();
+    if(!ready) alert("Select atleast one field ")
     chrome.runtime.sendMessage({
         type: "SUBMIT_CONFERENCE",
         conf_id: window.currentConf.conf_id
