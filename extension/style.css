@@ -95,15 +95,15 @@ body.dark select {
 
 .field-row {
   display: grid;
-  grid-template-columns: 110px 1fr;
+  grid-template-columns: 80px 1fr;
   align-items: center;
   gap: 8px;
   margin-bottom: 6px;
 }
 
 .field-label {
-  font-size: 11px;
-  opacity: 0.7;
+  font-size: 12px;
+  opacity: 0.8;
 }
 
 .field-row input {
@@ -204,16 +204,14 @@ body.dark .suggestions:not(:empty) {
   background: rgba(37, 99, 235, 0.1);
 }
 
-/* Rows */
-
 .row {
   display: flex;
   gap: 6px;
+  margin-top: 6px;
+  margin-bottom: 12px;
 }
 
-/* Select rows */
-
-.select-row {
+.mybutton {
   width: 100%;
   padding: 8px;
   border-radius: 10px;
@@ -223,14 +221,37 @@ body.dark .suggestions:not(:empty) {
   font-size: 12px;
 }
 
-body.light .select-row {
+.select-left{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+
+.select-left .label{
+  font-size:12px;
+  font-weight:500;
+}
+
+.action{
+  font-size:10px;
+  opacity:0.8;
+}
+
+.status{
+  font-size:10px;
+  opacity:0.8;
+}
+
+
+body.light .mybutton {
   border: 1px solid #e5e7eb;
   background: #fafafa;
 }
 
-body.dark .select-row {
+body.dark .mybutton {
   border: 1px solid #1e293b;
   background: #020617;
+  color: #e5e7eb;
 }
 
 .status {

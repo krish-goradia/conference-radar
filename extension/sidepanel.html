@@ -37,7 +37,7 @@
 
     <div class="field-row">
       <span class="field-label">URL</span>
-      <p class="field-value" id="confUrlDisplay">—</p>
+      <p class="field-value" id="conf_URL">—</p>
     </div>
 
     <div class="field-row">
@@ -59,52 +59,64 @@
   </div>
   <div class="card">
     <h2>Conference Fields</h2>
+        <div id = "btn_container">
+            <button class="mybutton" id="abs_deadline"data-mode="new">
+                    <div class="row-top">
+                        <span class="label">Abstract Deadline</span>
+                        <span class="status">Not set</span>
+                    </div>
+                    <div class="action">Click to select</div>
+            </button>
 
-    <button class="select-row" id = "abs_deadline" data-mode="new">
-      <span>Abstract Deadline</span>
-      <span class="status">Not set</span>   
-    </button>
+            <div class="row">
+            <input type="text" placeholder="Abstract Time">
+            <select><option>--</option></select>
+            </div>
 
-    <div class="row">
-      <input type="text" placeholder="Abstract Time">
-      <select><option>--</option></select>
-    </div>
+            <button class="mybutton" id="paper_deadline" data-mode="new">
+                    <div class="row-top">
+                        <span class="label">Paper Deadline</span>
+                        <span class="status">Not set</span>
+                    </div>
+                    <div class="action">Click to select</div>
+            </button>
 
-    <button class="select-row" id = "paper_deadline" data-mode="new">
-      <span>Paper Deadline</span>
-      <span class="status">Not set</span>
-    </button>
+            <div class="row">
+            <input type="text" placeholder="Paper Time">
+            <select><option>--</option></select>
+            </div>
 
-    <div class="row">
-      <input type="text" placeholder="Paper Time">
-      <select><option>--</option></select>
-    </div>
+            <button class="mybutton" id="conf_date" data-mode="new">
+                    <div class="row-top">
+                        <span class="label">Conference Date</span>
+                        <span class="status">Not set</span>
+                    </div>
+                    <div class="action">Click to select</div>
+            </button>
 
-    <button class="select-row" id = "confer_date" data-mode="new">
-      <span>Conference Date</span>
-      <span class="status">Not set</span>
-    </button>
+            <button class="mybutton" id="confer_time" data-mode="new">
+                    <div class="row-top">
+                        <span class="label">Conference Time</span>
+                        <span class="status">Not set</span>
+                    </div>
+                    <div class="action">Click to select</div>
+            </button>
 
-    <button class="select-row" id = "confer_time" data-mode="new">
-      <span>Conference Time</span>
-      <span class="status">Not set</span>
-    </button>
-
-    <button class="select-row" id = "confer_venue" data-mode="new">
-      <span>Conference Venue</span>
-      <span class="status">Not set</span>
-    </button>
+            <button class="mybutton" id="confer_venue" data-mode="new">
+                    <div class="row-top">
+                        <span class="label">Conference Venue</span>
+                        <span class="status">Not set</span>
+                    </div>
+                    <div class="action">Click to select</div>
+            </button>
+        </div>
   </div>
 
   <button class="primary-btn" id = "submitBtn">Save Conference</button>
 
 </div>
 
-<script>
-document.getElementById("themeToggle").addEventListener("change", () => {
-  document.body.classList.toggle("dark");
-});
-</script>
+<script src = "sidepanel.js"> </script>
 
 </body>
 </html>

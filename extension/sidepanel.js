@@ -1,7 +1,6 @@
 
 const btnContainer = document.getElementById("btn_container");
-const fieldContainer = document.getElementById("field_container");
-const submitbtn = document.getElementById("submitbtn");
+const submitbtn = document.getElementById("submitBtn");
 let currenttabid = null;
 
 const FIELD_LABELS = {
@@ -38,7 +37,7 @@ chrome.tabs.onUpdated.addListener(async(tabId,changeinfo,tab)=>{
 })
 
 chrome.runtime.onMessage.addListener((msg)=>{
-    if(msg.type != "CONFERENCE_READY") return;
+    if(msg.type !== "CONFERENCE_READY") return;
 
     const {isNew,conf_id,existing_fields,meta} = msg;
 
@@ -55,26 +54,27 @@ chrome.runtime.onMessage.addListener((msg)=>{
 });
 
 function showInitialUI(isNew,existing_fields,meta){
-    fieldContainer.innerHTML = "";
+    // Reset button states (buttons are static in HTML now)
+    const div = document.getElementById("conf_URL");
+    div.textContent = meta["URL"];
     if(!isNew){
         for(let fieldkey in existing_fields){
             const field = existing_fields[fieldkey]
             showfieldUI(fieldkey,field.label,true);
         }
     }
-    if(meta){
-        document.getElementById("conference_name").textContent = meta.name;
-    }
+    // if(meta){
+    //     document.getElementById("conference_name").textContent = meta.name;
+    // }
 }
 function showfieldUI(fieldkey,label,isDone){
-    const div = document.createElement("div");
-    div.id = `field-${fieldkey}`;
-    div.textContent = FIELD_LABELS[label] + (isDone ? ": SELECTION DONE ✅" : "");
-    fieldContainer.appendChild(div);
+    const div = document.querySelector(`#${fieldkey} .status`)
+    // div.id = `field-${fieldkey}`;
+    div.textContent = (isDone ? "Selected" : "Not Set");
+    //fieldContainer.appendChild(div);
     if(isDone){
-        const btn = btnContainer.querySelector(`#${fieldkey}`);
+        const btn = document.querySelector(`#${fieldkey}`);
         if(btn){
-            btn.textContent = "RESELECT";
             btn.dataset.mode = "edit"
         }
     }
@@ -82,7 +82,7 @@ function showfieldUI(fieldkey,label,isDone){
 
 
 btnContainer.addEventListener("click", async(eve)=>{
-    const btn = eve.target.closest("button");
+    const btn = eve.target.closest(".mybutton");
     if(!btn) return;
     const fieldkey = btn.id;
     if(!fieldkey) return;
@@ -92,7 +92,7 @@ btnContainer.addEventListener("click", async(eve)=>{
     //     alert("This field has been added");
     //     return;
     // }
-    const buttons = btnContainer.querySelectorAll("button");
+    const buttons = btnContainer.querySelectorAll(".mybutton");
     buttons.forEach(b=>{
         b.disabled = true;
     })
@@ -128,16 +128,12 @@ btnContainer.addEventListener("click", async(eve)=>{
 
 function addnewfieldtoUI(fieldkey,mode){
     if(mode == "new"){
-        const div = document.createElement("div");
-        div.id = `field-${fieldkey}`;
-        div.textContent = FIELD_LABELS[fieldkey] + " (selecting in progress...)";
-        fieldContainer.appendChild(div);
+        const div = document.querySelector(`#${fieldkey} .status`)
+        if(div) div.textContent = " Selecting...";
     }
     if(mode == "edit"){
-        const result = fieldContainer.querySelector(`#field-${fieldkey}`)
-        if(result){
-            result.textContent = FIELD_LABELS[fieldkey] + " (reselecting in progress...)";
-        }
+        const div = document.querySelector(`#${fieldkey} .status`)
+        if(div) div.textContent = " Reselecting...";
     }
     
 }
@@ -146,18 +142,19 @@ chrome.runtime.onMessage.addListener((msg)=>{
     if(msg.type!="FIELD_ADDED") return;
     const {fieldkey} = msg;
     window.currentConf.pending_fields[fieldkey].selected=true;
-    const div = document.getElementById(`field-${fieldkey}`);
+    const div = document.querySelector(`#${fieldkey} .status`);
     const mode = msg.mode;
-    const buttons = btnContainer.querySelectorAll("button");
+    const buttons = btnContainer.querySelectorAll(".mybutton");
     buttons.forEach(b=>{
         b.disabled=false;
     })
     if(div && mode == "new"){
-        div.textContent = FIELD_LABELS[fieldkey] + ": SELECTION DONE ✅";
+        div.textContent ="Selected ✅";
         btnContainer.querySelector(`#${fieldkey}`).dataset.mode = "edit";
-        btnContainer.querySelector(`#${fieldkey}`).textContent = "RESELECT"
+        const action = btnContainer.querySelector(`#${fieldkey} .action`);
+        if(action) action.textContent = "Click to reselect";
     }
-    if(div && mode == "edit") div.textContent = FIELD_LABELS[fieldkey] + ": RESELECTION DONE ✅";
+    if(div && mode == "edit") div.textContent = "Reselected ✅";
 
 
     checkreadyforsubmit();
@@ -175,3 +172,7 @@ submitbtn.addEventListener("click",()=>{
         conf_id: window.currentConf.conf_id
     });
 });
+
+document.getElementById("themeToggle").addEventListener("change", () => {
+  document.body.classList.toggle("dark");
+})

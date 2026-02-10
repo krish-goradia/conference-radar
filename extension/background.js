@@ -13,15 +13,15 @@ chrome.runtime.onMessage.addListener(async (msg,sender,send_resp)=>{
     const rawId = url.hostname + url.pathname;
     const state = await getConferenceState(rawId);
     const data = await chrome.storage.local.get(rawId);
-    const conf_data = data[rawId] || null;
-
-
+    const conf_data = data[rawId] || {fields:{},meta:{}};
+    conf_data.meta["URL"]=tab.url;
+    
     chrome.runtime.sendMessage({
         type: "CONFERENCE_READY",
         isNew: state,
         conf_id: rawId, 
         existing_fields: conf_data ? conf_data.fields : {},
-        meta: conf_data ? conf_data.meta : null  
+        meta: conf_data.meta  
     })
 
 })
