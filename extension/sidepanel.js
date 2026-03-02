@@ -59,6 +59,7 @@ metafields.addEventListener("input",(e=>{
     if(e.target.tagName == "INPUT"){
         const id = e.target.id;
         window.currentConf.meta[id] = e.target.value;
+        checkreadyforsubmit();
     }
 }))
 
@@ -186,20 +187,17 @@ chrome.runtime.onMessage.addListener((msg)=>{
 function checkreadyforsubmit(){
     const {pending_fields} = window.currentConf;
     const conf_meta = window.currentConf.meta;
-    const meta_filled = Object.values(conf_meta).every(f=>f!== null && f.toString().trim()!== "");
+    const required_meta = ['short_title', 'long_title',"research_domain"];
+    const meta_filled = required_meta.every(field => 
+        conf_meta[field] && conf_meta[field].toString().trim() !== ""
+    );
+    const changedone = Object.values(window.currentConf.pending_fields).length > 0;
     const done = Object.values(pending_fields).every(f=> f.selected == true);
-    submitbtn.disabled = !(done&&meta_filled);
+    submitbtn.disabled = !(done&&meta_filled &&changedone);
 }
 
-function checkPresentFields(){
-    const pending_done = Object.values(window.currentConf.pending_fields).some(f=>f.selected == true)
-    const existing_done = Object.values(window.currentConf.existing_fields).length  > 0;
-    return pending_done || existing_done;
-}
 
 submitbtn.addEventListener("click",()=>{
-    const ready = checkPresentFields();
-    if(!ready) alert("Select atleast one field ")
     chrome.runtime.sendMessage({
         type: "SUBMIT_CONFERENCE",
         conf_id: window.currentConf.conf_id
