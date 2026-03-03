@@ -10,16 +10,19 @@ chrome.runtime.onMessage.addListener(async (msg,sender,send_resp)=>{
     if (msg.type !== "PANEL_OPEN") return;
     const tab = await chrome.tabs.get(msg.tabId);
     const url = new URL(tab.url);
-    const rawId = url.hostname + url.pathname;
-    const state = await getConferenceState(rawId);
-    const data = await chrome.storage.local.get(rawId);
-    const conf_data = data[rawId] || {fields:{},meta:{}};
-    conf_data.meta["URL"]=tab.url;
+    const confer_id = url.hostname + url.pathname;
+    // im checking with db
+
+    // im checking with chrome storage
+    const state = await getConferenceState(confer_id);
+    const data = await chrome.storage.local.get(confer_id);
+    const conf_data = data[confer_id] || {fields:{},meta:{}};
+    conf_data.meta["conf_URL"]=tab.url;
     
     chrome.runtime.sendMessage({
         type: "CONFERENCE_READY",
         isNew: state,
-        conf_id: rawId, 
+        conf_id: confer_id, 
         existing_fields: conf_data ? conf_data.fields : {},
         meta: conf_data.meta  
     })
@@ -55,7 +58,42 @@ chrome.runtime.onMessage.addListener(async (msg,sender)=>{
 
 chrome.runtime.onMessage.addListener(async (msg) => {
     if(msg.type !== "SUBMIT_CONFERENCE") return;
-    console.log("Conference submitted:", msg.conf_id);
     // const data = await chrome.storage.local.get(msg.conf_id);
-    // console.log(data);
+    // const conf = data[msg.conf_id] || { fields: {}, meta: {} };
+    // conf.meta = { ...conf.meta, ...msg.meta };
+    // await chrome.storage.local.set({ [msg.conf_id]: conf });
+    // console.log("Conference saved:", msg.conf_id, conf);
+    const confer_id = msg.conf_id;
+    const data = await chrome.storage.local.get(confer_id);
+    const conf = data[confer_id];
+    if(!conf){
+        console.log("No conference data found");
+        return;
+    }
+    try{
+        const res = await fetch("http://localhost:5000/submit-conference",{
+            method : "POST",
+            headers: {
+                "Content-Type":"application/json"
+            },
+            body: JSON.stringify({
+                conf_ext_id: confer_id,
+                fields:conf.fields,
+                meta: conf.meta
+            })
+
+        });
+
+        const result = await res.json();
+        if(result.success){
+            console.log("saved to db", confer_id);
+            await chrome.storage.local.remove(confer_id);
+        }
+        else{
+            console.error("save failed", confer_id);
+        }
+    }
+    catch(err){
+        console.log("error with backend", err)
+    }
 });

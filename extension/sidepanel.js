@@ -55,10 +55,23 @@ chrome.runtime.onMessage.addListener((msg)=>{
 
 });
 
+let metaSaveTimeout = null;
+
 metafields.addEventListener("input",(e=>{
     if(e.target.tagName == "INPUT"){
         const id = e.target.id;
         window.currentConf.meta[id] = e.target.value;
+
+        clearTimeout(metaSaveTimeout);
+        metaSaveTimeout = setTimeout(() => {
+            const conf_id = window.currentConf.conf_id;
+            chrome.storage.local.get(conf_id).then(data => {
+                const conf = data[conf_id] || { fields: {}, meta: {} };
+                conf.meta = { ...conf.meta, ...window.currentConf.meta };
+                chrome.storage.local.set({ [conf_id]: conf });
+            });
+        }, 500);
+
         checkreadyforsubmit();
     }
 }))
@@ -66,7 +79,7 @@ metafields.addEventListener("input",(e=>{
 function showInitialUI(isNew,existing_fields,meta){
     // Reset button states (buttons are static in HTML now)
     const div = document.getElementById("conf_URL");
-    div.textContent = meta["URL"];
+    div.textContent = meta["conf_URL"];
     if(!isNew){
         for(let fieldkey in existing_fields){
             showfieldUI(fieldkey,"confer_details",true);
@@ -95,6 +108,7 @@ function showfieldUI(fieldkey,type,isDone,value= null){
     }
     if(type === "meta_details"){
         const div = document.getElementById(`${fieldkey}`)
+        if(!div) return;
         const p = document.createElement("p");
         p.className = "field_value";
         p.id = div.id;
@@ -200,7 +214,8 @@ function checkreadyforsubmit(){
 submitbtn.addEventListener("click",()=>{
     chrome.runtime.sendMessage({
         type: "SUBMIT_CONFERENCE",
-        conf_id: window.currentConf.conf_id
+        conf_id: window.currentConf.conf_id,
+        meta: window.currentConf.meta
     });
 });
 
