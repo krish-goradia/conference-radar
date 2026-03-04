@@ -2,6 +2,8 @@
 const btnContainer = document.getElementById("btn_container");
 const submitbtn = document.getElementById("submitBtn");
 const metafields = document.getElementById("_metafields");
+const absTimeInput = document.getElementById("abs_time");
+const paperTimeInput = document.getElementById("paper_time");
 let currenttabid = null;
 
 const FIELD_LABELS = {
@@ -56,7 +58,7 @@ chrome.runtime.onMessage.addListener((msg)=>{
 });
 
 let metaSaveTimeout = null;
-
+let timeSaveTimeouts = {};
 metafields.addEventListener("input",(e=>{
     if(e.target.tagName == "INPUT"){
         const id = e.target.id;
@@ -76,6 +78,27 @@ metafields.addEventListener("input",(e=>{
     }
 }))
 
+function setTimebeforeSaving(fieldkey, value){
+    clearTimeout(timeSaveTimeouts[fieldkey]);
+    timeSaveTimeouts[fieldkey] = setTimeout(()=>{
+        const conf_id = window.currentConf.conf_id;
+        chrome.storage.local.get(conf_id).then(data => {
+            const conf = data[conf_id] || { fields: {}, meta: {} };
+            conf.fields[fieldkey] = { value: value };
+            chrome.storage.local.set({ [conf_id]: conf });
+        });
+    },500);
+}
+
+absTimeInput.addEventListener("input",(e=>{
+    window.currentConf.existing_fields["abs_time"] = { value: e.target.value };
+    setTimebeforeSaving("abs_time",e.target.value);
+}))
+
+paperTimeInput.addEventListener("input",(e=>{
+    window.currentConf.existing_fields["paper_time"] = { value: e.target.value };
+    setTimebeforeSaving("paper_time",e.target.value);
+}))
 function showInitialUI(isNew,existing_fields,meta){
     // Reset button states (buttons are static in HTML now)
     const div = document.getElementById("conf_URL");
@@ -88,15 +111,22 @@ function showInitialUI(isNew,existing_fields,meta){
             const value = meta[metafield]
             showfieldUI(metafield,"meta_details",true,value);
         }
+        if(absTimeInput && existing_fields.abs_time){
+            absTimeInput.value = existing_fields.abs_time.value || "";
+        }
+        if(paperTimeInput && existing_fields.paper_time){
+            paperTimeInput.value = existing_fields.paper_time.value || "";
+        }
     }
     // if(meta){
     //     document.getElementById("conference_name").textContent = meta.name;
     // }
 }
 function showfieldUI(fieldkey,type,isDone,value= null){
-    if(type === "confer_details"){
+    if(type === "confer_details" && fieldkey !== "abs_time" && fieldkey !== "paper_time"){
         const div = document.querySelector(`#${fieldkey} .status`)
         // div.id = `field-${fieldkey}`;
+        if(!div) return;
         div.textContent = (isDone ? "Selected" : "Not Set");
         //fieldContainer.appendChild(div);
         if(isDone){
@@ -199,15 +229,21 @@ chrome.runtime.onMessage.addListener((msg)=>{
 })
 
 function checkreadyforsubmit(){
-    const {pending_fields} = window.currentConf;
+    const {pending_fields, existing_fields} = window.currentConf;
     const conf_meta = window.currentConf.meta;
     const required_meta = ['short_title', 'long_title',"research_domain"];
     const meta_filled = required_meta.every(field => 
         conf_meta[field] && conf_meta[field].toString().trim() !== ""
     );
-    const changedone = Object.values(window.currentConf.pending_fields).length > 0;
-    const done = Object.values(pending_fields).every(f=> f.selected == true);
-    submitbtn.disabled = !(done&&meta_filled &&changedone);
+    const has_pending = Object.keys(pending_fields).length > 0;
+    const pending_done = Object.values(pending_fields).every(f=> f.selected == true);
+    const has_existing = Object.keys(existing_fields).length > 0;
+    
+    const fields_ok = has_pending ? pending_done : has_existing;
+    // if fields changed, it depends on if they were successfully completed or not
+    // if fields arent changed (fields meaning the confer fields), it depends if any exist or not
+    // user can submit if required meta fields are updated/added or confer fields are updated/ added or both
+    submitbtn.disabled = !(meta_filled && fields_ok);
 }
 
 

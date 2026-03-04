@@ -1,10 +1,23 @@
 
-async function getConferenceState(identifier){
-    const data = await chrome.storage.local.get(identifier)
-    const state = data[identifier] === undefined 
-    return state;
-}
+// async function getConferenceStatefromChrome(identifier){
+//     const data = await chrome.storage.local.get(identifier)
+//     const state = data[identifier] === undefined 
+//     return state;
+// }
 
+async function getConferenceStatefromDB(identifier){
+    try{
+        const response = await fetch(
+            `http://localhost:5000/confgetbyid?conf_ext_id=${identifier}`
+        );
+        const data = await response.json();
+        return data;
+    }
+    catch(err){
+        console.error("DB Check Conf State Error", err);
+        return {success:false}; // exists means success connection but not there
+    }
+}
 
 chrome.runtime.onMessage.addListener(async (msg,sender,send_resp)=>{
     if (msg.type !== "PANEL_OPEN") return;
@@ -12,13 +25,22 @@ chrome.runtime.onMessage.addListener(async (msg,sender,send_resp)=>{
     const url = new URL(tab.url);
     const confer_id = url.hostname + url.pathname;
     // im checking with db
-
-    // im checking with chrome storage
-    const state = await getConferenceState(confer_id);
-    const data = await chrome.storage.local.get(confer_id);
-    const conf_data = data[confer_id] || {fields:{},meta:{}};
+    let conf_data = await getConferenceStatefromDB(confer_id);
+    let state;
+    // if(conf_data.success === false){
+    //     window.alert("Server is down! Try Again Later")
+    // } work on this error handling and other cases as well
+    if(conf_data.exists === false){
+        // im checking with chrome storage
+        const data = await chrome.storage.local.get(confer_id);
+        state = data[confer_id] === undefined;
+        conf_data = data[confer_id] || {fields:{},meta:{}}; // NOT DB AND NOT CHROME then new so default  
+    }
+    else{
+        state = false;
+        conf_data = {fields:conf_data.fields, meta: conf_data.meta};
+    }
     conf_data.meta["conf_URL"]=tab.url;
-    
     chrome.runtime.sendMessage({
         type: "CONFERENCE_READY",
         isNew: state,
