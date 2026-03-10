@@ -70,8 +70,14 @@
             </button>
 
             <div class="row">
-            <input type="text" id="abs_time" placeholder="Abstract Time">
-            <select><option>--</option></select>
+            <button class="mybutton" id="abs_time" data-mode="new">
+                    <div class="row-top">
+                        <span class="label">Abstract Time</span>
+                        <span class="status">Not set</span>
+                    </div>
+                    <div class="action">Click to select</div>
+            </button>
+            <select id="abs_timezone"><option>--</option></select>
             </div>
 
             <button class="mybutton" id="paper_deadline" data-mode="new">
@@ -83,8 +89,14 @@
             </button>
 
             <div class="row">
-            <input type="text" id="paper_time" placeholder="Paper Time">
-            <select><option>--</option></select>
+            <button class="mybutton" id="paper_time" data-mode="new">
+                    <div class="row-top">
+                        <span class="label">Paper Time</span>
+                        <span class="status">Not set</span>
+                    </div>
+                    <div class="action">Click to select</div>
+            </button>
+            <select id="paper_timezone"><option>--</option></select>
             </div>
 
             <button class="mybutton" id="conf_date" data-mode="new">

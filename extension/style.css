@@ -209,6 +209,17 @@ body.dark .suggestions:not(:empty) {
   gap: 6px;
   margin-top: 6px;
   margin-bottom: 12px;
+  align-items: stretch; /* */
+}
+.row .mybutton {
+  width: auto;   /* override global width:100% */
+  flex: 1;       /* button takes remaining space */
+  margin-bottom: 0;
+}
+
+.row select {
+  width: 65px;   /* smaller timezone dropdown */
+  flex-shrink: 0;
 }
 
 .mybutton {

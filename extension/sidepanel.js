@@ -2,8 +2,6 @@
 const btnContainer = document.getElementById("btn_container");
 const submitbtn = document.getElementById("submitBtn");
 const metafields = document.getElementById("_metafields");
-const absTimeInput = document.getElementById("abs_time");
-const paperTimeInput = document.getElementById("paper_time");
 
 const conferFields = [...document.querySelectorAll("#btn_container .mybutton")].map(btn => btn.id)
 const metaFields = [...metafields.querySelectorAll("input")].map(input => input.id)
@@ -60,7 +58,6 @@ chrome.runtime.onMessage.addListener((msg)=>{
 });
 
 let metaSaveTimeout = null;
-let timeSaveTimeouts = {};
 metafields.addEventListener("input",(e=>{
     if(e.target.tagName === "INPUT"){
         const id = e.target.id;
@@ -80,27 +77,7 @@ metafields.addEventListener("input",(e=>{
     }
 }))
 
-function setTimebeforeSaving(fieldkey, value){
-    clearTimeout(timeSaveTimeouts[fieldkey]);
-    timeSaveTimeouts[fieldkey] = setTimeout(()=>{
-        const conf_id = window.currentConf.conf_id;
-        chrome.storage.local.get(conf_id).then(data => {
-            const conf = data[conf_id] || { fields: {}, meta: {} };
-            conf.fields[fieldkey] = { value: value };
-            chrome.storage.local.set({ [conf_id]: conf });
-        });
-    },500);
-}
 
-absTimeInput.addEventListener("input",(e=>{
-    window.currentConf.existing_fields["abs_time"] = { value: e.target.value };
-    setTimebeforeSaving("abs_time",e.target.value);
-}))
-
-paperTimeInput.addEventListener("input",(e=>{
-    window.currentConf.existing_fields["paper_time"] = { value: e.target.value };
-    setTimebeforeSaving("paper_time",e.target.value);
-}))
 function showInitialUI(isNew,existing_fields,meta){
     // Reset button states (buttons are static in HTML now)
     const urldiv = document.getElementById("conf_URL");
@@ -115,12 +92,7 @@ function showInitialUI(isNew,existing_fields,meta){
         const value = meta ? meta[field]: "";
         showfieldUI(field,"meta_details",true,value)
     }
-    if(absTimeInput){
-        absTimeInput.value = existing_fields?.abs_time?.value || ""
-    }
-    if(paperTimeInput){
-        paperTimeInput.value = existing_fields?.paper_time?.value || ""
-    }
+
     // if(!isNew){
     //     for(let fieldkey in existing_fields){
     //         showfieldUI(fieldkey,"confer_details",true);
@@ -142,7 +114,7 @@ function showInitialUI(isNew,existing_fields,meta){
     checkreadyforsubmit();
 }
 function showfieldUI(fieldkey,type,isDone,value= null){
-    if(type === "confer_details" && fieldkey !== "abs_time" && fieldkey !== "paper_time"){
+    if(type === "confer_details"){
         const div = document.querySelector(`#${fieldkey} .status`)
         // div.id = `field-${fieldkey}`;
         if(!div) return;
