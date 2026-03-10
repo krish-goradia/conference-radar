@@ -21,12 +21,22 @@ app.get("/",(req,res)=>{
 
 app.get("/conferences", async (req,res)=>{
     try{
-        const result = await pool.query("SELECT * FROM CONFERENCES")
-        res.json(result.rows)
+        const result = await pool.query("SELECT * FROM CONFERENCES");
+        res.json(result.rows);
     }
     catch (err){
-        res.status(500).json({error: err.message,success:false})
+        res.status(500).json({error: err.message,success:false});
 
+    }
+})
+
+app.get("/scrape-configs",async(req,res)=>{
+    try{
+        const result = await pool.query("SELECT * FROM SCRAPE_CONFIGS");
+        res.json(result.rows);
+    }
+    catch (err){
+        res.status(500).json({error:err.message,success:false})
     }
 })
 
@@ -51,7 +61,7 @@ app.get("/confgetbyid",async(req,res)=>{
                 sc.conftime_xpath,
                 sc.confvenue_xpath,
                 sc.conf_url,
-                sc.confer_ext_id,
+                sc.conf_ext_id,
                 c.abs_time,
                 c.paper_time,
                 c.short_title,
@@ -61,7 +71,7 @@ app.get("/confgetbyid",async(req,res)=>{
              FROM scrape_configs sc
              LEFT JOIN conferences c
              ON c.config_id = sc.id
-             WHERE sc.raw_id = $1`,
+             WHERE sc.conf_ext_id = $1`,
             [conf_ext_id]
         );
         if (result.rowCount==0) return res.json({exists:false});
@@ -69,7 +79,7 @@ app.get("/confgetbyid",async(req,res)=>{
 
         res.json({
             exists: true,
-            confer_id: row.confer_ext_id,
+            confer_id: row.conf_ext_id,
             fields:{
                 abs_deadline: {xpath:row.absdeadline_xpath},
                 abs_time: {value: row.abs_time},
@@ -109,31 +119,38 @@ app.post("/submit-conference",async(req,res)=>{
 
         await client.query("BEGIN");
         const scrape_result = await client.query(
-            `INSERT INTO scrape_configs (
-                conf_url,
-                raw_id,
-                absdeadline_xpath,
-                papdeadline_xpath,
-                confdate_xpath,
-                conftime_xpath,
-                confvenue_xpath
-            )
-            VALUES ($1,$2,$3,$4,$5,$6,$7)
-            RETURNING id`,
-            [
-                meta.conf_URL,
-                conf_ext_id,
-                fields.abs_deadline?.xpath || null,
-                fields.paper_deadline?.xpath || null,
-                fields.conf_date?.xpath || null,
-                fields.confer_time?.xpath || null,
-                fields.confer_venue?.xpath || null
-            ]
+        `INSERT INTO scrape_configs (
+            conf_url,
+            conf_ext_id,
+            absdeadline_xpath,
+            papdeadline_xpath,
+            confdate_xpath,
+            conftime_xpath,
+            confvenue_xpath
+        )
+        VALUES ($1,$2,$3,$4,$5,$6,$7)
+        ON CONFLICT (conf_ext_id)
+        DO UPDATE SET
+            conf_url = COALESCE(EXCLUDED.conf_url, scrape_configs.conf_url),
+            absdeadline_xpath = COALESCE(EXCLUDED.absdeadline_xpath, scrape_configs.absdeadline_xpath),
+            papdeadline_xpath = COALESCE(EXCLUDED.papdeadline_xpath, scrape_configs.papdeadline_xpath),
+            confdate_xpath = COALESCE(EXCLUDED.confdate_xpath, scrape_configs.confdate_xpath),
+            conftime_xpath = COALESCE(EXCLUDED.conftime_xpath, scrape_configs.conftime_xpath),
+            confvenue_xpath = COALESCE(EXCLUDED.confvenue_xpath, scrape_configs.confvenue_xpath)
+        RETURNING id`,
+        [
+            meta.conf_URL,
+            conf_ext_id,
+            fields.abs_deadline?.xpath || null,
+            fields.paper_deadline?.xpath || null,
+            fields.conf_date?.xpath || null,
+            fields.confer_time?.xpath || null,
+            fields.confer_venue?.xpath || null
+        ]
         );
         const config_id = scrape_result.rows[0].id;
         const conf_result = await client.query(
             `INSERT INTO conferences (
-                conf_ext_id,
                 config_id,
                 short_title,
                 long_title,
@@ -142,9 +159,16 @@ app.post("/submit-conference",async(req,res)=>{
                 abs_time,
                 paper_time
             )
-            VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+            VALUES ($1,$2,$3,$4,$5,$6,$7)
+            ON CONFLICT (config_id)
+            DO UPDATE SET
+                short_title = COALESCE(EXCLUDED.short_title, conferences.short_title),
+                long_title = COALESCE(EXCLUDED.long_title, conferences.long_title),
+                research_domain = COALESCE(EXCLUDED.research_domain, conferences.research_domain),
+                keywords = COALESCE(EXCLUDED.keywords, conferences.keywords),
+                abs_time = COALESCE(EXCLUDED.abs_time, conferences.abs_time),
+                paper_time = COALESCE(EXCLUDED.paper_time, conferences.paper_time)`,
             [
-                conf_ext_id,
                 config_id,
                 meta.short_title || null,
                 meta.long_title || null,
@@ -153,7 +177,7 @@ app.post("/submit-conference",async(req,res)=>{
                 fields.abs_time?.value || null,
                 fields.paper_time?.value || null
             ]
-        );
+            );
 
         await client.query("COMMIT");
 
