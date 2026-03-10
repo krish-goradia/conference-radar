@@ -30,7 +30,7 @@ chrome.runtime.onMessage.addListener(async (msg,sender,send_resp)=>{
     // if(conf_data.success === false){
     //     window.alert("Server is down! Try Again Later")
     // } work on this error handling and other cases as well
-    if(conf_data.exists === false){
+    if(conf_data.success === false || conf_data.exists === false){
         // im checking with chrome storage
         const data = await chrome.storage.local.get(confer_id);
         state = data[confer_id] === undefined;
@@ -59,7 +59,7 @@ chrome.runtime.onMessage.addListener(async (msg,sender)=>{
     const data = await chrome.storage.local.get(confer_id);
     const conf = data[confer_id] || {fields:{},meta:{}};
     const mode = msg.mode;
-
+    conf.meta["conf_URL"] = url.href;
     conf.fields[msg.fieldkey]={
         ...conf.fields[msg.fieldkey],
         label:msg.fieldkey,

@@ -4,17 +4,20 @@ const submitbtn = document.getElementById("submitBtn");
 const metafields = document.getElementById("_metafields");
 const absTimeInput = document.getElementById("abs_time");
 const paperTimeInput = document.getElementById("paper_time");
+
+const conferFields = [...document.querySelectorAll("#btn_container .mybutton")].map(btn => btn.id)
+const metaFields = [...metafields.querySelectorAll("input")].map(input => input.id)
 let currenttabid = null;
+
 
 const FIELD_LABELS = {
     "confer_place" : "Conference Place",
     "paper_deadline": "Paper Deadline",
     "abs_deadline": "Abstract Deadline"
 }
-
 async function panelopen(){
     const [tab] = await chrome.tabs.query({active:true,currentWindow:true});
-
+    currenttabid = tab.id;
     chrome.runtime.sendMessage({
         type:"PANEL_OPEN",
         tabId: tab.id
@@ -31,7 +34,7 @@ chrome.tabs.onActivated.addListener(async(activeinfo)=>{
 })
 
 chrome.tabs.onUpdated.addListener(async(tabId,changeinfo,tab)=>{
-    if(tabId == currenttabid &&changeinfo.url){
+    if(tabId === currenttabid &&changeinfo.status === "complete"){
         chrome.runtime.sendMessage({
             type:"PANEL_OPEN",
             tabId: tabId
@@ -42,7 +45,6 @@ chrome.tabs.onUpdated.addListener(async(tabId,changeinfo,tab)=>{
 
 chrome.runtime.onMessage.addListener((msg)=>{
     if(msg.type !== "CONFERENCE_READY") return;
-
     const {isNew,conf_id,existing_fields,meta} = msg;
 
     window.currentConf = {
@@ -60,7 +62,7 @@ chrome.runtime.onMessage.addListener((msg)=>{
 let metaSaveTimeout = null;
 let timeSaveTimeouts = {};
 metafields.addEventListener("input",(e=>{
-    if(e.target.tagName == "INPUT"){
+    if(e.target.tagName === "INPUT"){
         const id = e.target.id;
         window.currentConf.meta[id] = e.target.value;
 
@@ -101,26 +103,43 @@ paperTimeInput.addEventListener("input",(e=>{
 }))
 function showInitialUI(isNew,existing_fields,meta){
     // Reset button states (buttons are static in HTML now)
-    const div = document.getElementById("conf_URL");
-    div.textContent = meta["conf_URL"];
-    if(!isNew){
-        for(let fieldkey in existing_fields){
-            showfieldUI(fieldkey,"confer_details",true);
-        }
-        for(let metafield in meta){
-            const value = meta[metafield]
-            showfieldUI(metafield,"meta_details",true,value);
-        }
-        if(absTimeInput && existing_fields.abs_time){
-            absTimeInput.value = existing_fields.abs_time.value || "";
-        }
-        if(paperTimeInput && existing_fields.paper_time){
-            paperTimeInput.value = existing_fields.paper_time.value || "";
-        }
+    const urldiv = document.getElementById("conf_URL");
+    if(urldiv){
+        urldiv.textContent = meta?.conf_URL || "Can't read URL";
     }
+    for(const field of conferFields){
+        const isDone = !isNew && field in existing_fields;
+        showfieldUI(field,"confer_details",isDone)
+    }
+    for(const field of metaFields){
+        const value = meta ? meta[field]: "";
+        showfieldUI(field,"meta_details",true,value)
+    }
+    if(absTimeInput){
+        absTimeInput.value = existing_fields?.abs_time?.value || ""
+    }
+    if(paperTimeInput){
+        paperTimeInput.value = existing_fields?.paper_time?.value || ""
+    }
+    // if(!isNew){
+    //     for(let fieldkey in existing_fields){
+    //         showfieldUI(fieldkey,"confer_details",true);
+    //     }
+    //     for(let metafield in meta){
+    //         const value = meta[metafield]
+    //         showfieldUI(metafield,"meta_details",true,value);
+    //     }
+    //     if(absTimeInput && existing_fields.abs_time){
+    //         absTimeInput.value = existing_fields.abs_time.value || "";
+    //     }
+    //     if(paperTimeInput && existing_fields.paper_time){
+    //         paperTimeInput.value = existing_fields.paper_time.value || "";
+    //     }
+    // }
     // if(meta){
     //     document.getElementById("conference_name").textContent = meta.name;
     // }
+    checkreadyforsubmit();
 }
 function showfieldUI(fieldkey,type,isDone,value= null){
     if(type === "confer_details" && fieldkey !== "abs_time" && fieldkey !== "paper_time"){
@@ -129,21 +148,19 @@ function showfieldUI(fieldkey,type,isDone,value= null){
         if(!div) return;
         div.textContent = (isDone ? "Selected" : "Not Set");
         //fieldContainer.appendChild(div);
-        if(isDone){
-            const btn = document.querySelector(`#${fieldkey}`);
-            if(btn){
-                btn.dataset.mode = "edit"
-            }
+        const btn = document.querySelector(`#${fieldkey}`);
+        if(btn){
+            btn.dataset.mode = isDone? "edit" : "new";
+        }
+        const action = document.querySelector(`#${fieldkey} .action`);
+        if(action){
+            action.textContent = isDone ? "Click to reselect" : "Click to select";
         }
     }
     if(type === "meta_details"){
-        const div = document.getElementById(`${fieldkey}`)
-        if(!div) return;
-        const p = document.createElement("p");
-        p.className = "field_value";
-        p.id = div.id;
-        p.textContent = value;
-        div.replaceWith(p);
+    const input = document.getElementById(fieldkey);
+    if(!input) return;
+    input.value = value || "";
     }
 
 }
@@ -197,11 +214,11 @@ btnContainer.addEventListener("click", async(eve)=>{
 function addnewfieldtoUI(fieldkey,mode){
     if(mode == "new"){
         const div = document.querySelector(`#${fieldkey} .status`)
-        if(div) div.textContent = " Selecting...";
+        if(div) div.textContent = "Selecting...";
     }
     if(mode == "edit"){
         const div = document.querySelector(`#${fieldkey} .status`)
-        if(div) div.textContent = " Reselecting...";
+        if(div) div.textContent = "Reselecting...";
     }
     
 }
@@ -209,7 +226,9 @@ function addnewfieldtoUI(fieldkey,mode){
 chrome.runtime.onMessage.addListener((msg)=>{
     if(msg.type!="FIELD_ADDED") return;
     const {fieldkey} = msg;
-    window.currentConf.pending_fields[fieldkey].selected=true;
+    if(window.currentConf.pending_fields[fieldkey]){
+        window.currentConf.pending_fields[fieldkey].selected=true;
+    }
     const div = document.querySelector(`#${fieldkey} .status`);
     const mode = msg.mode;
     const buttons = btnContainer.querySelectorAll(".mybutton");
