@@ -43,15 +43,16 @@
       <div class="field-row">
         <span class="field-label">Research Domain *</span>
         <div class="autocomplete">
-          <input type="text" id="research_domain"  placeholder="Search or add domain" spellcheck="false" autocomplete="off">
+          <input type="text" id="research_domain"  placeholder="Search and add domain" spellcheck="false" autocomplete="off">
           <div class="suggestions" id="domainSuggestions"></div>
         </div>
       </div>
 
       <div class="field-row">
         <span class="field-label">Keywords</span>
-        <div class="autocomplete">
-          <input type="text" id="keywords"  placeholder="Search or add keywords" spellcheck="false" autocomplete="off">
+        <div class="autocomplete tag-input-wrap">
+          <div id="kwTags" class="tag-container"></div>
+          <input type="text" id="keywords" placeholder="Search and add keyword" spellcheck="false" autocomplete="off">
           <div class="suggestions" id="keywordSuggestions"></div>
         </div>
       </div>
@@ -140,6 +141,8 @@
   </div>
   
   <button class="primary-btn" id = "submitBtn">Save Conference</button>
+
+  <div id="toast" class="toast"></div>
 
 </div>
 

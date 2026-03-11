@@ -5,8 +5,8 @@
 
 body {
   margin: 0;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
+  overflow-y: auto;
 }
 
 body.light {
@@ -22,7 +22,7 @@ body.dark {
 /* Layout */
 
 .container {
-  height: 100vh;
+  min-height: 100vh;
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
@@ -208,6 +208,57 @@ body.dark .suggestions:not(:empty) {
   background: rgba(37, 99, 235, 0.1);
 }
 
+/* Tag input */
+
+.tag-input-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+}
+
+.tag-input-wrap input {
+  flex: 1;
+  min-width: 60px;
+}
+
+.tag-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.kw-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+body.light .kw-tag {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+body.dark .kw-tag {
+  background: #1e293b;
+  color: #93c5fd;
+}
+
+.kw-tag .remove-tag {
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  opacity: 0.6;
+}
+
+.kw-tag .remove-tag:hover {
+  opacity: 1;
+}
+
 .row {
   display: flex;
   gap: 6px;
@@ -339,4 +390,39 @@ input:checked + .slider {
 
 input:checked + .slider:before {
   transform: translateX(16px);
+}
+
+/* Toast notification */
+
+.toast {
+  position: fixed;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 100;
+}
+
+.toast-show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+}
+
+.toast-success {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+.toast-error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
 }

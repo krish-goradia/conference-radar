@@ -111,10 +111,18 @@ function showInitialUI(isNew,existing_fields,meta){
         showfieldUI(field,"confer_details",isDone)
     }
     for(const field of metaFields){
+        if(field === "keywords") continue;
         const value = meta ? meta[field]: "";
         showfieldUI(field,"meta_details",true,value)
     }
     restoreTimezoneDropdowns(existing_fields);
+    // Restore keyword tags from meta
+    keywordsList = [];
+    if (meta?.keywords) {
+        const kws = Array.isArray(meta.keywords) ? meta.keywords : meta.keywords.split(",");
+        kws.forEach(k => { if (k.trim()) keywordsList.push(k.trim()); });
+    }
+    renderTags();
     checkreadyforsubmit();
 }
 
@@ -270,6 +278,122 @@ submitbtn.addEventListener("click",()=>{
     });
 });
 
+chrome.runtime.onMessage.addListener((msg) => {
+    if (msg.type !== "SUBMIT_RESULT") return;
+    if (msg.success) {
+        showToast("Submitted to Dashboard", "success");
+    } else {
+        showToast("Error submitting. Try Again!", "error");
+    }
+});
+
+function showToast(message, type) {
+    const toast = document.getElementById("toast");
+    toast.textContent = message;
+    toast.className = "toast toast-" + type + " toast-show";
+    setTimeout(() => {
+        toast.className = "toast";
+    }, 3000);
+}
+
 document.getElementById("themeToggle").addEventListener("change", () => {
   document.body.classList.toggle("dark");
 })
+
+// keywords tag-style input with autocomplete
+const kwInput = document.getElementById("keywords");
+const kwSuggestions = document.getElementById("keywordSuggestions");
+const kwTagsContainer = document.getElementById("kwTags");
+let kwDebounce = null;
+let kwSaveTimeout = null;
+let keywordsList = [];
+
+function syncKeywordsMeta() {
+    window.currentConf.meta["keywords"] = [...keywordsList];
+    clearTimeout(kwSaveTimeout);
+    kwSaveTimeout = setTimeout(() => {
+        const conf_id = window.currentConf.conf_id;
+        chrome.storage.local.get(conf_id).then(data => {
+            const conf = data[conf_id] || { fields: {}, meta: {} };
+            conf.meta = { ...conf.meta, ...window.currentConf.meta };
+            chrome.storage.local.set({ [conf_id]: conf });
+        });
+    }, 500);
+}
+
+function renderTags() {
+    kwTagsContainer.innerHTML = "";
+    keywordsList.forEach((kw, i) => {
+        const tag = document.createElement("span");
+        tag.className = "kw-tag";
+        tag.textContent = kw;
+        const removeBtn = document.createElement("span");
+        removeBtn.className = "remove-tag";
+        removeBtn.dataset.idx = i;
+        removeBtn.textContent = "\u00d7";
+        tag.appendChild(removeBtn);
+        kwTagsContainer.appendChild(tag);
+    });
+}
+
+function addKeyword(val) {
+    const kw = val.trim();
+    if (kw && !keywordsList.includes(kw)) {
+        keywordsList.push(kw);
+        renderTags();
+        syncKeywordsMeta();
+    }
+    kwInput.value = "";
+    kwSuggestions.innerHTML = "";
+}
+
+kwTagsContainer.addEventListener("click", (e) => {
+    const removeBtn = e.target.closest(".remove-tag");
+    if (!removeBtn) return;
+    keywordsList.splice(parseInt(removeBtn.dataset.idx), 1);
+    renderTags();
+    syncKeywordsMeta();
+});
+
+kwInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === ",") {
+        e.preventDefault();
+        addKeyword(kwInput.value);
+    }
+    if (e.key === "Backspace" && kwInput.value === "" && keywordsList.length > 0) {
+        keywordsList.pop();
+        renderTags();
+        syncKeywordsMeta();
+    }
+});
+
+kwInput.addEventListener("input", () => {
+    clearTimeout(kwDebounce);
+    const q = kwInput.value.trim();
+    if (q.length < 1) {
+        kwSuggestions.innerHTML = "";
+        return;
+    }
+    kwDebounce = setTimeout(async () => {
+        try {
+            const res = await fetch(`http://localhost:5000/autocomplete/keywords?q=${encodeURIComponent(q)}`);
+            const items = await res.json();
+            kwSuggestions.innerHTML = "";
+            items.filter(item => !keywordsList.includes(item)).forEach(item => {
+                const div = document.createElement("div");
+                div.className = "suggestion-item";
+                div.textContent = item;
+                div.addEventListener("click", () => addKeyword(item));
+                kwSuggestions.appendChild(div);
+            });
+        } catch (err) {
+            kwSuggestions.innerHTML = "";
+        }
+    }, 300);
+});
+
+document.addEventListener("click", (e) => {
+    if (!e.target.closest(".tag-input-wrap")) {
+        kwSuggestions.innerHTML = "";
+    }
+});
