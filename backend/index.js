@@ -126,7 +126,9 @@ app.post("/submit-conference",async(req,res)=>{
             papdeadline_xpath,
             confdate_xpath,
             conftime_xpath,
-            confvenue_xpath
+            confvenue_xpath,
+            abstime_xpath,
+            papertime_xpath
         )
         VALUES ($1,$2,$3,$4,$5,$6,$7)
         ON CONFLICT (conf_ext_id)
@@ -136,7 +138,9 @@ app.post("/submit-conference",async(req,res)=>{
             papdeadline_xpath = COALESCE(EXCLUDED.papdeadline_xpath, scrape_configs.papdeadline_xpath),
             confdate_xpath = COALESCE(EXCLUDED.confdate_xpath, scrape_configs.confdate_xpath),
             conftime_xpath = COALESCE(EXCLUDED.conftime_xpath, scrape_configs.conftime_xpath),
-            confvenue_xpath = COALESCE(EXCLUDED.confvenue_xpath, scrape_configs.confvenue_xpath)
+            confvenue_xpath = COALESCE(EXCLUDED.confvenue_xpath, scrape_configs.confvenue_xpath),
+            abstime_xpath = COALESCE(EXCLUDED.abstime_xpath, scrape_configs.abstime_xpath),
+            papertime_xpath = COALESCE(EXCLUDED.papertime_xpath,scrape_configs.papertime_xpath)
         RETURNING id`,
         [
             meta.conf_URL,
@@ -145,7 +149,9 @@ app.post("/submit-conference",async(req,res)=>{
             fields.paper_deadline?.xpath || null,
             fields.conf_date?.xpath || null,
             fields.confer_time?.xpath || null,
-            fields.confer_venue?.xpath || null
+            fields.confer_venue?.xpath || null,
+            fields.abs_time?.xpath|| null,
+            fields.paper_time?.xpath || null
         ]
         );
         const config_id = scrape_result.rows[0].id;
@@ -156,8 +162,8 @@ app.post("/submit-conference",async(req,res)=>{
                 long_title,
                 research_domain,
                 keywords,
-                abs_time,
-                paper_time
+                abs_timezone,
+                paper_timezone
             )
             VALUES ($1,$2,$3,$4,$5,$6,$7)
             ON CONFLICT (config_id)
@@ -166,16 +172,16 @@ app.post("/submit-conference",async(req,res)=>{
                 long_title = COALESCE(EXCLUDED.long_title, conferences.long_title),
                 research_domain = COALESCE(EXCLUDED.research_domain, conferences.research_domain),
                 keywords = COALESCE(EXCLUDED.keywords, conferences.keywords),
-                abs_time = COALESCE(EXCLUDED.abs_time, conferences.abs_time),
-                paper_time = COALESCE(EXCLUDED.paper_time, conferences.paper_time)`,
+                abs_timezone = COALESCE(EXCLUDED.abs_timezone, conferences.abs_time),
+                paper_timezone = COALESCE(EXCLUDED.paper_timezone, conferences.paper_time)`,
             [
                 config_id,
                 meta.short_title || null,
                 meta.long_title || null,
                 meta.research_domain || null,
                 meta.keywords ? meta.keywords : null,
-                fields.abs_time?.value || null,
-                fields.paper_time?.value || null
+                fields.abs_timezone?.value || null,
+                fields.paper_timezone?.value || null
             ]
             );
 
