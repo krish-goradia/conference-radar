@@ -2,7 +2,8 @@
 const btnContainer = document.getElementById("btn_container");
 const submitbtn = document.getElementById("submitBtn");
 const metafields = document.getElementById("_metafields");
-
+const abstz = document.getElementById("abs_timezone");
+const papertz = document.getElementById("paper_timezone");
 const conferFields = [...document.querySelectorAll("#btn_container .mybutton")].map(btn => btn.id)
 const metaFields = [...metafields.querySelectorAll("input")].map(input => input.id)
 let currenttabid = null;
@@ -58,6 +59,7 @@ chrome.runtime.onMessage.addListener((msg)=>{
 });
 
 let metaSaveTimeout = null;
+let timezoneSaveTimeouts = {};
 metafields.addEventListener("input",(e=>{
     if(e.target.tagName === "INPUT"){
         const id = e.target.id;
@@ -77,6 +79,26 @@ metafields.addEventListener("input",(e=>{
     }
 }))
 
+abstz.addEventListener("change", (e) => {
+    saveTimezoneField("abs_timezone", e.target.value);
+});
+papertz.addEventListener("change", (e) => {
+    saveTimezoneField("paper_timezone", e.target.value);
+});
+
+function saveTimezoneField(fieldkey, value){
+    window.currentConf.existing_fields[fieldkey] = { value };
+    clearTimeout(timezoneSaveTimeouts[fieldkey]);
+    timezoneSaveTimeouts[fieldkey] = setTimeout(()=>{
+        const conf_id = window.currentConf.conf_id;
+        chrome.storage.local.get(conf_id).then(data => {
+            const conf = data[conf_id] || { fields: {}, meta: {} };
+            conf.fields[fieldkey] = { value };
+            chrome.storage.local.set({ [conf_id]: conf });
+        });
+    }, 500);
+}
+
 
 function showInitialUI(isNew,existing_fields,meta){
     // Reset button states (buttons are static in HTML now)
@@ -92,27 +114,29 @@ function showInitialUI(isNew,existing_fields,meta){
         const value = meta ? meta[field]: "";
         showfieldUI(field,"meta_details",true,value)
     }
-
-    // if(!isNew){
-    //     for(let fieldkey in existing_fields){
-    //         showfieldUI(fieldkey,"confer_details",true);
-    //     }
-    //     for(let metafield in meta){
-    //         const value = meta[metafield]
-    //         showfieldUI(metafield,"meta_details",true,value);
-    //     }
-    //     if(absTimeInput && existing_fields.abs_time){
-    //         absTimeInput.value = existing_fields.abs_time.value || "";
-    //     }
-    //     if(paperTimeInput && existing_fields.paper_time){
-    //         paperTimeInput.value = existing_fields.paper_time.value || "";
-    //     }
-    // }
-    // if(meta){
-    //     document.getElementById("conference_name").textContent = meta.name;
-    // }
+    restoreTimezoneDropdowns(existing_fields);
     checkreadyforsubmit();
 }
+
+
+
+function restoreTimezoneDropdowns(existing_fields){
+    if(abstz && existing_fields?.abs_timezone?.value){
+        abstz.value = existing_fields.abs_timezone.value;
+    } else if(abstz){
+        abstz.value = "AoE";
+        existing_fields["abs_timezone"] = { value: "AoE" };
+    }
+    if(papertz && existing_fields?.paper_timezone?.value){
+        papertz.value = existing_fields.paper_timezone.value;
+    } else if(papertz){
+        papertz.value = "AoE";
+        existing_fields["paper_timezone"] = { value: "AoE" };
+    }
+}
+
+
+
 function showfieldUI(fieldkey,type,isDone,value= null){
     if(type === "confer_details"){
         const div = document.querySelector(`#${fieldkey} .status`)

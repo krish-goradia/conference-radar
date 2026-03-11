@@ -117,8 +117,9 @@ body.dark select {
   padding: 6px 8px;
   border-radius: 8px;
   max-width: 100%;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 body.light .field-value {
