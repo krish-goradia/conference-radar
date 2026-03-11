@@ -110,12 +110,15 @@ chrome.runtime.onMessage.addListener(async (msg) => {
         if(result.success){
             console.log("saved to db", confer_id);
             await chrome.storage.local.remove(confer_id);
+            chrome.runtime.sendMessage({ type: "SUBMIT_RESULT", success: true });
         }
         else{
             console.error("save failed", confer_id);
+            chrome.runtime.sendMessage({ type: "SUBMIT_RESULT", success: false });
         }
     }
     catch(err){
         console.log("error with backend", err)
+        chrome.runtime.sendMessage({ type: "SUBMIT_RESULT", success: false });
     }
 });
