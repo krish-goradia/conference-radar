@@ -105,6 +105,29 @@ app.get("/confgetbyid",async(req,res)=>{
     
 })
 
+// endpoint for autocomplete keywords
+app.get("/autocomplete/keywords",async(req,res)=>{
+    try{
+        const q = req.query.q || "";
+        
+        const result = await pool.query(`
+            SELECT DISTINCT kw
+            FROM (
+                SELECT unnest(keywords) AS kw
+                FROM conferences
+            ) t
+            WHERE LOWER(kw) LIKE LOWER($1)
+            LIMIT 10
+        `, [`%${q}%`]);
+
+        res.json(result.rows.map(r => r.kw));
+    }
+    catch(err){
+        res.status(500).json({error:err.message});
+    }
+});
+
+// endpoint for autocomplete research domain
 
 // submit endpoint
 app.post("/submit-conference",async(req,res)=>{
@@ -130,7 +153,7 @@ app.post("/submit-conference",async(req,res)=>{
             abstime_xpath,
             papertime_xpath
         )
-        VALUES ($1,$2,$3,$4,$5,$6,$7)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
         ON CONFLICT (conf_ext_id)
         DO UPDATE SET
             conf_url = COALESCE(EXCLUDED.conf_url, scrape_configs.conf_url),
@@ -172,8 +195,8 @@ app.post("/submit-conference",async(req,res)=>{
                 long_title = COALESCE(EXCLUDED.long_title, conferences.long_title),
                 research_domain = COALESCE(EXCLUDED.research_domain, conferences.research_domain),
                 keywords = COALESCE(EXCLUDED.keywords, conferences.keywords),
-                abs_timezone = COALESCE(EXCLUDED.abs_timezone, conferences.abs_time),
-                paper_timezone = COALESCE(EXCLUDED.paper_timezone, conferences.paper_time)`,
+                abs_timezone = COALESCE(EXCLUDED.abs_timezone, conferences.abs_timezone),
+                paper_timezone = COALESCE(EXCLUDED.paper_timezone, conferences.paper_timezone)`,
             [
                 config_id,
                 meta.short_title || null,
