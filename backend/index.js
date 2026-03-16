@@ -1,8 +1,9 @@
-require("dotenv").config()
-const express = require("express")
-const {Pool} = require("pg")
-const cors = require("cors")
-
+import dotenv from "dotenv"
+dotenv.config()
+import express from "express"
+import { Pool } from "pg"
+import cors from "cors"
+import { startScheduler } from "./scraper/scheduler.js"
 const  app = express()
 app.use(cors())
 app.use(express.json())
@@ -41,7 +42,8 @@ app.get("/scrape-configs",async(req,res)=>{
 })
 
 app.listen(process.env.PORT, ()=>{
-    console.log("Server running on 5000")
+    console.log(`Server running on ${process.env.PORT}`)
+    startScheduler()
 })
 
 // my endpoints
@@ -223,3 +225,6 @@ app.post("/submit-conference",async(req,res)=>{
         client.release();
     }
 });
+
+export default pool;
+
