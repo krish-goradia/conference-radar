@@ -1,6 +1,8 @@
 import dotenv from "dotenv"
 dotenv.config()
 import express from "express"
+import bcrypt from "bcrypt"
+import jwt from "jsonwebtoken"
 import { Pool } from "pg"
 import cors from "cors"
 import { startScheduler } from "./scraper/scheduler.js"
@@ -15,6 +17,8 @@ const pool = new Pool( {
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
 })
+
+export default pool;
 
 app.get("/",(req,res)=>{
     res.send("Backend Running")
@@ -226,5 +230,56 @@ app.post("/submit-conference",async(req,res)=>{
     }
 });
 
-export default pool;
+app.post("/signup",async(req,res)=>{
+    const {email,password} = req.body
+    const hash = await bcrypt.hash(password,10)
+    try{
+        const user = await pool.query(
+        "INSERT INTO users(email,password_hash) VALUES($1,$2) RETURNING id",
+        [email, hash]
+        )
+        res.json({success:true,userId:user.rows[0].id})
+    }
+    catch(err){
+        if(err.code === "23505"){
+            return res.status(400).json({
+                success:false,
+                error: "Email already exists"
+            })
+        }
+        res.status(500).json({error:"Server Error",success:false})
+    }
+})
+
+app.post("/login",async(req,res)=>{
+    try{
+        const {email,password} = req.body
+        const user = await pool.query(
+            "SELECT * FROM users WHERE email=$1",
+            [email]
+        )
+        if(user.rows.length === 0){
+            return res.status(401).json({success:false, error: "Dont have account"})
+        }
+        const valid = await bcrypt.compare(password,user.rows[0].password_hash)
+        if(!valid){
+            return res.status(401).json({success:false, error:"Invalid credentials"})
+        }
+        const token = jwt.sign(
+            {userId: user.rows[0].id},
+            process.env.JWT_SECRET_KEY,
+            {expiresIn:"7d"}
+        )
+        res.json({success:true,token})
+    }
+    catch(err){
+        console.error(err)
+        res.status(500).json({
+            success:false,
+            error:"Server Error"
+        })
+    }
+})
+
+
 
