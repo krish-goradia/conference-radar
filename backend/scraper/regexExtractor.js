@@ -18,7 +18,7 @@ export function extractTime(text){
     if(!text || typeof text !== 'string') return null
 
     try{
-        // 1️⃣ Format like "14:30" or "2:30 pm"
+        //"14:30" or "2:30 pm"
         let match = text.match(/\b(\d{1,2}):(\d{2})\s*(am|pm)?\b/i)
         if(match){
             let hours = parseInt(match[1])
