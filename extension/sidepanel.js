@@ -6,6 +6,8 @@ const abstz = document.getElementById("abs_timezone");
 const papertz = document.getElementById("paper_timezone");
 const conferFields = [...document.querySelectorAll("#btn_container .mybutton")].map(btn => btn.id)
 const metaFields = [...metafields.querySelectorAll("input")].map(input => input.id)
+const authView = document.getElementById("authView")
+const mainView = document.getElementById("mainView")
 let currenttabid = null;
 
 
@@ -14,6 +16,30 @@ const FIELD_LABELS = {
     "paper_deadline": "Paper Deadline",
     "abs_deadline": "Abstract Deadline"
 }
+
+async function initAuth(){
+    const {token} = await chrome.storage.local.get("token")
+    if(token){
+        showMainView();
+    }
+    else{
+        showAuthView();
+    }
+}
+function showAuthView(){
+    authView.style.display = "flex"
+    mainView.style.display = "none"
+}
+function showMainView(){
+    authView.style.display = "none"
+    mainView.style.display = "block"
+    setTimeout(panelopen,100);
+}
+
+
+
+
+
 async function panelopen(){
     const [tab] = await chrome.tabs.query({active:true,currentWindow:true});
     currenttabid = tab.id;
@@ -23,7 +49,7 @@ async function panelopen(){
     });
 }
 
-setTimeout(panelopen,100);
+
 chrome.tabs.onActivated.addListener(async(activeinfo)=>{
     currenttabid = activeinfo.tabId;
     chrome.runtime.sendMessage({

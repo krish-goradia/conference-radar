@@ -7,145 +7,162 @@
 </head>
 
 <body class="light">
-
-<div class="container">
-
-  <div class="header">
-    <div>
-      <h1>Add Conference</h1>
-    </div>
-
-    <label class="switch">
-      <input type="checkbox" id="themeToggle">
-      <span class="slider"></span>
-    </label>
-  </div>
-
-
-  <div class="card">
-    <h2>Conference Meta</h2>
-    <div id = "_metafields">
-      <div class="field-row">
-        <span class="field-label">Short Title *</span>
-        <input type="text"  id="short_title">
-      </div>
-
-      <div class="field-row">
-        <span class="field-label">Long Title *</span>
-        <input type="text"  id="long_title">
-      </div>
-
-      <div class="field-row">
-        <span class="field-label">URL</span>
-        <p class="field-value"  id="conf_URL">—</p>
-      </div>
-
-      <div class="field-row">
-        <span class="field-label">Research Domain *</span>
-        <div class="autocomplete">
-          <input type="text" id="research_domain"  placeholder="Search and add domain" spellcheck="false" autocomplete="off">
-          <div class="suggestions" id="domainSuggestions"></div>
-        </div>
-      </div>
-
-      <div class="field-row">
-        <span class="field-label">Keywords</span>
-        <div class="autocomplete tag-input-wrap">
-          <div id="kwTags" class="tag-container"></div>
-          <input type="text" id="keywords" placeholder="Search and add keyword" spellcheck="false" autocomplete="off">
-          <div class="suggestions" id="keywordSuggestions"></div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-  <div class="card">
-    <h2>Conference Fields</h2>
-        <div id = "btn_container">
-            <button class="mybutton" id="abs_deadline"data-mode="new">
-                    <div class="row-top">
-                        <span class="label">Abstract Deadline</span>
-                        <span class="status">Not set</span>
-                    </div>
-                    <div class="action">Click to select</div>
-            </button>
-
-            <div class="row">
-            <button class="mybutton" id="abs_time" data-mode="new">
-                    <div class="row-top">
-                        <span class="label">Abstract Time</span>
-                        <span class="status">Not set</span>
-                    </div>
-                    <div class="action">Click to select</div>
-            </button>
-            <select id="abs_timezone">
-              <option value="AoE" selected>AoE</option>
-              <option value = "PT"> PT </option>
-              <option value = "CET"> CET </option>
-              <option value = "ET"> ET </option>
-              <option value = "GMT"> GMT </option>
-              <option value = "IST"> IST </option>
-            </select>
-            </div>
-
-            <button class="mybutton" id="paper_deadline" data-mode="new">
-                    <div class="row-top">
-                        <span class="label">Paper Deadline</span>
-                        <span class="status">Not set</span>
-                    </div>
-                    <div class="action">Click to select</div>
-            </button>
-
-            <div class="row">
-            <button class="mybutton" id="paper_time" data-mode="new">
-                    <div class="row-top">
-                        <span class="label">Paper Time</span>
-                        <span class="status">Not set</span>
-                    </div>
-                    <div class="action">Click to select</div>
-            </button>
-            <select id="paper_timezone">
-                <option value="AoE" selected>AoE</option>
-                <option value = "PT"> PT </option>
-                <option value = "CET"> CET </option>
-                <option value = "ET"> ET </option>
-                <option value = "GMT"> GMT </option>
-                <option value = "IST"> IST </option>
-            </select>
-            </div>
-
-            <button class="mybutton" id="conf_date" data-mode="new">
-                    <div class="row-top">
-                        <span class="label">Conference Date</span>
-                        <span class="status">Not set</span>
-                    </div>
-                    <div class="action">Click to select</div>
-            </button>
-
-            <button class="mybutton" id="confer_time" data-mode="new">
-                    <div class="row-top">
-                        <span class="label">Conference Time</span>
-                        <span class="status">Not set</span>
-                    </div>
-                    <div class="action">Click to select</div>
-            </button>
-
-            <button class="mybutton" id="confer_venue" data-mode="new">
-                    <div class="row-top">
-                        <span class="label">Conference Venue</span>
-                        <span class="status">Not set</span>
-                    </div>
-                    <div class="action">Click to select</div>
-            </button>
-        </div>
-  </div>
   
-  <button class="primary-btn" id = "submitBtn">Save Conference</button>
+  <div id="authView" class="container">
+    <div class="card">
+      <h2>Login / Signup</h2>
 
-  <div id="toast" class="toast"></div>
+      <input type="email" id="email" placeholder="Email" required/>
+      <input type="password" id="password" placeholder="Password" required/>
 
-</div>
+      <button class="primary-btn" id="loginBtn">Login</button>
+      <button class="primary-btn" id="signupBtn">Signup</button>
 
+      <div id="error"></div>
+    </div>
+  </div>
+
+
+
+  <div id = "mainView" style = "display:none;">
+      <div class="container">
+
+        <div class="header">
+          <div>
+            <h1>Add Conference</h1>
+          </div>
+
+          <label class="switch">
+            <input type="checkbox" id="themeToggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+
+        <div class="card">
+          <h2>Conference Meta</h2>
+          <div id = "_metafields">
+            <div class="field-row">
+              <span class="field-label">Short Title *</span>
+              <input type="text"  id="short_title">
+            </div>
+
+            <div class="field-row">
+              <span class="field-label">Long Title *</span>
+              <input type="text"  id="long_title">
+            </div>
+
+            <div class="field-row">
+              <span class="field-label">URL</span>
+              <p class="field-value"  id="conf_URL">—</p>
+            </div>
+
+            <div class="field-row">
+              <span class="field-label">Research Domain *</span>
+              <div class="autocomplete">
+                <input type="text" id="research_domain"  placeholder="Search and add domain" spellcheck="false" autocomplete="off">
+                <div class="suggestions" id="domainSuggestions"></div>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <span class="field-label">Keywords</span>
+              <div class="autocomplete tag-input-wrap">
+                <div id="kwTags" class="tag-container"></div>
+                <input type="text" id="keywords" placeholder="Search and add keyword" spellcheck="false" autocomplete="off">
+                <div class="suggestions" id="keywordSuggestions"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div class="card">
+          <h2>Conference Fields</h2>
+              <div id = "btn_container">
+                  <button class="mybutton" id="abs_deadline"data-mode="new">
+                          <div class="row-top">
+                              <span class="label">Abstract Deadline</span>
+                              <span class="status">Not set</span>
+                          </div>
+                          <div class="action">Click to select</div>
+                  </button>
+
+                  <div class="row">
+                  <button class="mybutton" id="abs_time" data-mode="new">
+                          <div class="row-top">
+                              <span class="label">Abstract Time</span>
+                              <span class="status">Not set</span>
+                          </div>
+                          <div class="action">Click to select</div>
+                  </button>
+                  <select id="abs_timezone">
+                    <option value="AoE" selected>AoE</option>
+                    <option value = "PT"> PT </option>
+                    <option value = "CET"> CET </option>
+                    <option value = "ET"> ET </option>
+                    <option value = "GMT"> GMT </option>
+                    <option value = "IST"> IST </option>
+                  </select>
+                  </div>
+
+                  <button class="mybutton" id="paper_deadline" data-mode="new">
+                          <div class="row-top">
+                              <span class="label">Paper Deadline</span>
+                              <span class="status">Not set</span>
+                          </div>
+                          <div class="action">Click to select</div>
+                  </button>
+
+                  <div class="row">
+                  <button class="mybutton" id="paper_time" data-mode="new">
+                          <div class="row-top">
+                              <span class="label">Paper Time</span>
+                              <span class="status">Not set</span>
+                          </div>
+                          <div class="action">Click to select</div>
+                  </button>
+                  <select id="paper_timezone">
+                      <option value="AoE" selected>AoE</option>
+                      <option value = "PT"> PT </option>
+                      <option value = "CET"> CET </option>
+                      <option value = "ET"> ET </option>
+                      <option value = "GMT"> GMT </option>
+                      <option value = "IST"> IST </option>
+                  </select>
+                  </div>
+
+                  <button class="mybutton" id="conf_date" data-mode="new">
+                          <div class="row-top">
+                              <span class="label">Conference Date</span>
+                              <span class="status">Not set</span>
+                          </div>
+                          <div class="action">Click to select</div>
+                  </button>
+
+                  <button class="mybutton" id="confer_time" data-mode="new">
+                          <div class="row-top">
+                              <span class="label">Conference Time</span>
+                              <span class="status">Not set</span>
+                          </div>
+                          <div class="action">Click to select</div>
+                  </button>
+
+                  <button class="mybutton" id="confer_venue" data-mode="new">
+                          <div class="row-top">
+                              <span class="label">Conference Venue</span>
+                              <span class="status">Not set</span>
+                          </div>
+                          <div class="action">Click to select</div>
+                  </button>
+              </div>
+        </div>
+        
+        <button class="primary-btn" id = "submitBtn">Save Conference</button>
+
+        <div id="toast" class="toast"></div>
+
+      </div>
+    </div>
 <script src = "sidepanel.js"> </script>
 
 </body>

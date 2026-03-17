@@ -6,6 +6,9 @@ import jwt from "jsonwebtoken"
 import { Pool } from "pg"
 import cors from "cors"
 import { startScheduler } from "./scraper/scheduler.js"
+import { auth } from "./auth.js"
+
+
 const  app = express()
 app.use(cors())
 app.use(express.json())
@@ -53,7 +56,7 @@ app.listen(process.env.PORT, ()=>{
 // my endpoints
 // query by rawid
 
-app.get("/confgetbyid",async(req,res)=>{
+app.get("/confgetbyid",auth,async(req,res)=>{
     try{
         const {conf_ext_id} = req.query;
         if(!conf_ext_id){
@@ -112,7 +115,7 @@ app.get("/confgetbyid",async(req,res)=>{
 })
 
 // endpoint for autocomplete keywords
-app.get("/autocomplete/keywords",async(req,res)=>{
+app.get("/autocomplete/keywords",auth,async(req,res)=>{
     try{
         const q = req.query.q || "";
         
@@ -136,7 +139,7 @@ app.get("/autocomplete/keywords",async(req,res)=>{
 // endpoint for autocomplete research domain
 
 // submit endpoint
-app.post("/submit-conference",async(req,res)=>{
+app.post("/submit-conference",auth,async(req,res)=>{
     const client = await pool.connect();
     try{
         const{
