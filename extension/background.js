@@ -7,10 +7,11 @@
 
 async function getConferenceStatefromDB(identifier){
     try{
-        const response = await fetch(
-            `http://localhost:5000/confgetbyid?conf_ext_id=${identifier}`
-        );
-        const data = await response.json();
+        const {token} = await chrome.storage.local.get("token");
+        const res = await fetch(`http://localhost:5000/confgetbyid?conf_ext_id=${identifier}`, {
+                headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
         return data;
     }
     catch(err){
@@ -50,6 +51,28 @@ chrome.runtime.onMessage.addListener(async (msg,sender,send_resp)=>{
     })
 
 })
+
+chrome.runtime.onMessage.addListener(async(msg)=>{
+    if(msg.type!=="AUTH_REQUEST") return;
+    const endpoint = msg.action === "login" ? "login" :"signup"
+    try{
+        const res = await fetch(`http://localhost:5000/${endpoint}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: msg.email, password: msg.password })
+        });
+        const data = await res.json();
+        if(!data.success) throw new Error (data.error || `${msg.action} failed`);
+        await chrome.storage.local.set({token:data.token});
+        chrome.runtime.sendMessage({type:"AUTH_RESULT",success:true});
+    }
+    catch(err){
+        chrome.runtime.sendMessage({type:"AUTH_RESULT",success:false,error:err.message});
+    }
+})
+
+
+
 
 chrome.runtime.onMessage.addListener(async (msg,sender)=>{
     if(msg.type!=="FIELD_SELECTED") return;
@@ -93,10 +116,12 @@ chrome.runtime.onMessage.addListener(async (msg) => {
         return;
     }
     try{
+        const {token} = await chrome.storage.local.get("token");
         const res = await fetch("http://localhost:5000/submit-conference",{
             method : "POST",
             headers: {
-                "Content-Type":"application/json"
+                "Content-Type":"application/json",
+                "Authorization": `Bearer ${token}`
             },
             body: JSON.stringify({
                 conf_ext_id: confer_id,
@@ -105,7 +130,6 @@ chrome.runtime.onMessage.addListener(async (msg) => {
             })
 
         });
-
         const result = await res.json();
         if(result.success){
             console.log("saved to db", confer_id);

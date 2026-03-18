@@ -8,6 +8,9 @@ const conferFields = [...document.querySelectorAll("#btn_container .mybutton")].
 const metaFields = [...metafields.querySelectorAll("input")].map(input => input.id)
 const authView = document.getElementById("authView")
 const mainView = document.getElementById("mainView")
+const loginBtn = document.getElementById("loginBtn")
+const signupBtn = document.getElementById("signupBtn")
+const logoutBtn = document.getElementById("logoutBtn")
 let currenttabid = null;
 
 
@@ -36,6 +39,47 @@ function showMainView(){
     setTimeout(panelopen,100);
 }
 
+loginBtn.addEventListener("click",()=>{
+    const email = document.getElementById("email").value.trim()
+    const password = document.getElementById("password").value.trim()
+    document.getElementById("error").textContent = "";
+    chrome.runtime.sendMessage({type:"AUTH_REQUEST", action: "login",email,password})
+})
+
+signupBtn.addEventListener("click",()=>{
+    const email = document.getElementById("email").value.trim()
+    const password = document.getElementById("password").value.trim()
+    document.getElementById("error").textContent = "";
+    chrome.runtime.sendMessage({ type: "AUTH_REQUEST", action: "signup", email, password });
+})
+
+chrome.runtime.onMessage.addListener((msg)=>{
+    if(msg.type!== "AUTH_RESULT") return;
+    if(msg.success){
+        showMainView();
+    }
+    else{
+        document.getElementById("error").textContent = msg.error;
+    }
+})
+
+logoutBtn.addEventListener("click", async () => {
+    // Clear token from storage
+    await chrome.storage.local.remove("token");
+    
+    // Clear all conference drafts (all keys except token)
+    const allItems = await chrome.storage.local.get(null);
+    const keysToRemove = Object.keys(allItems).filter(key => key !== "token");
+    await chrome.storage.local.remove(keysToRemove);
+    
+    // Show auth view
+    showAuthView();
+    
+    // Clear form fields
+    document.getElementById("email").value = "";
+    document.getElementById("password").value = "";
+    document.getElementById("error").textContent = "";
+});
 
 
 
@@ -402,7 +446,11 @@ kwInput.addEventListener("input", () => {
     }
     kwDebounce = setTimeout(async () => {
         try {
-            const res = await fetch(`http://localhost:5000/autocomplete/keywords?q=${encodeURIComponent(q)}`);
+            const{token} = await chrome.storage.local.get("token");
+            const res = await fetch(`http://localhost:5000/autocomplete/keywords?q=${encodeURIComponent(q)}`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+
             const items = await res.json();
             kwSuggestions.innerHTML = "";
             items.filter(item => !keywordsList.includes(item)).forEach(item => {
@@ -423,3 +471,6 @@ document.addEventListener("click", (e) => {
         kwSuggestions.innerHTML = "";
     }
 });
+
+
+initAuth();

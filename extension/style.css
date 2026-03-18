@@ -351,6 +351,22 @@ body.dark .mybutton {
   opacity: 0.5;
 }
 
+.logout-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  background: #ef4444;
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.logout-btn:hover {
+  background: #dc2626;
+}
+
 /* Theme toggle */
 
 .switch {
