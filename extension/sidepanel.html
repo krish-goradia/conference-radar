@@ -8,17 +8,31 @@
 
 <body class="light">
   
-  <div id="authView" class="container">
-    <div class="card">
-      <h2>Login / Signup</h2>
+  <div id="authView" class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <h1>Conference Radar</h1>
+        <p>Track deadlines effortlessly</p>
+      </div>
 
-      <input type="email" id="email" placeholder="Email" required/>
-      <input type="password" id="password" placeholder="Password" required/>
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="login">Login</button>
+        <button class="auth-tab" data-tab="signup">Signup</button>
+      </div>
 
-      <button class="primary-btn" id="loginBtn">Login</button>
-      <button class="primary-btn" id="signupBtn">Signup</button>
+      <div class="auth-form" id="loginForm">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" placeholder="your@email.com" required/>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="••••••••" required/>
+        </div>
+        <button class="auth-btn" id="loginBtn">Sign In</button>
+      </div>
 
-      <div id="error"></div>
+      <div class="auth-error" id="error"></div>
     </div>
   </div>
 
@@ -166,6 +180,24 @@
 
       </div>
     </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Confirm Logout</h2>
+        </div>
+        <div class="modal-body">
+          <p>⚠️ All unsaved conference drafts will be permanently deleted.</p>
+          <p>Are you sure you want to logout?</p>
+        </div>
+        <div class="modal-footer">
+          <button id="cancelLogout" class="modal-btn cancel">Cancel</button>
+          <button id="confirmLogout" class="modal-btn logout">Logout</button>
+        </div>
+      </div>
+    </div>
+
 <script src = "sidepanel.js"> </script>
 
 </body>

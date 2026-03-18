@@ -9,8 +9,9 @@ const metaFields = [...metafields.querySelectorAll("input")].map(input => input.
 const authView = document.getElementById("authView")
 const mainView = document.getElementById("mainView")
 const loginBtn = document.getElementById("loginBtn")
-const signupBtn = document.getElementById("signupBtn")
 const logoutBtn = document.getElementById("logoutBtn")
+const authTabs = document.querySelectorAll(".auth-tab")
+const loginForm = document.getElementById("loginForm")
 let currenttabid = null;
 
 
@@ -19,6 +20,19 @@ const FIELD_LABELS = {
     "paper_deadline": "Paper Deadline",
     "abs_deadline": "Abstract Deadline"
 }
+authTabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+        const action = tab.dataset.tab;
+        authTabs.forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        if(action === "login") {
+            loginBtn.textContent = "Sign In";
+        } else {
+            loginBtn.textContent = "Create Account";
+        }
+        loginBtn.dataset.action = action;
+    });
+});
 
 async function initAuth(){
     const {token} = await chrome.storage.local.get("token")
@@ -42,15 +56,24 @@ function showMainView(){
 loginBtn.addEventListener("click",()=>{
     const email = document.getElementById("email").value.trim()
     const password = document.getElementById("password").value.trim()
+    const action = loginBtn.dataset.action || "login"
     document.getElementById("error").textContent = "";
-    chrome.runtime.sendMessage({type:"AUTH_REQUEST", action: "login",email,password})
+    
+    if(!email || !password) {
+        document.getElementById("error").textContent = "Please fill in all fields"
+        return
+    }
+    
+    chrome.runtime.sendMessage({type:"AUTH_REQUEST", action: action, email, password})
 })
 
-signupBtn.addEventListener("click",()=>{
-    const email = document.getElementById("email").value.trim()
-    const password = document.getElementById("password").value.trim()
-    document.getElementById("error").textContent = "";
-    chrome.runtime.sendMessage({ type: "AUTH_REQUEST", action: "signup", email, password });
+// Allow Enter key to submit
+document.getElementById("email")?.addEventListener("keypress", (e) => {
+    if(e.key === "Enter") loginBtn.click()
+})
+
+document.getElementById("password")?.addEventListener("keypress", (e) => {
+    if(e.key === "Enter") loginBtn.click()
 })
 
 chrome.runtime.onMessage.addListener((msg)=>{
@@ -64,24 +87,40 @@ chrome.runtime.onMessage.addListener((msg)=>{
 })
 
 logoutBtn.addEventListener("click", async () => {
+    const modal = document.getElementById("logoutModal");
+    modal.classList.add("show");
+});
+
+document.getElementById("cancelLogout").addEventListener("click", () => {
+    const modal = document.getElementById("logoutModal");
+    modal.classList.remove("show");
+});
+
+document.getElementById("confirmLogout").addEventListener("click", async () => {
     // Clear token from storage
     await chrome.storage.local.remove("token");
     
-    // Clear all conference drafts (all keys except token)
+    // Clear all conference drafts
     const allItems = await chrome.storage.local.get(null);
     const keysToRemove = Object.keys(allItems).filter(key => key !== "token");
     await chrome.storage.local.remove(keysToRemove);
     
-    // Show auth view
-    showAuthView();
+    // Hide modal and show auth view
+    const modal = document.getElementById("logoutModal");
+    modal.classList.remove("show");
     
-    // Clear form fields
+    showAuthView();
     document.getElementById("email").value = "";
     document.getElementById("password").value = "";
     document.getElementById("error").textContent = "";
 });
 
-
+// Close modal when clicking outside (on the backdrop)
+document.getElementById("logoutModal").addEventListener("click", (e) => {
+    if (e.target.id === "logoutModal") {
+        e.target.classList.remove("show");
+    }
+});
 
 
 async function panelopen(){
@@ -211,6 +250,7 @@ function restoreTimezoneDropdowns(existing_fields){
         papertz.value = "AoE";
         existing_fields["paper_timezone"] = { value: "AoE" };
     }
+    window.currentConf.existing_fields = existing_fields;
 }
 
 
