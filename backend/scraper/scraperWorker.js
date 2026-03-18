@@ -1,4 +1,4 @@
-import pool from "../index.js"
+import pool from "../db.js"
 import {getPage} from "./browser.js"
 import { extractFields } from "./extractor.js"
 import {handleFields} from "./fieldHandler.js"

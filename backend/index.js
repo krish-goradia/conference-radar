@@ -3,25 +3,14 @@ dotenv.config()
 import express from "express"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
-import { Pool } from "pg"
 import cors from "cors"
 import { startScheduler } from "./scraper/scheduler.js"
 import { auth } from "./auth.js"
-
+import pool from "./db.js"
 
 const  app = express()
 app.use(cors())
 app.use(express.json())
-
-const pool = new Pool( {
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT,
-})
-
-export default pool;
 
 app.get("/",(req,res)=>{
     res.send("Backend Running")
@@ -190,6 +179,7 @@ app.post("/submit-conference",auth,async(req,res)=>{
         const conf_result = await client.query(
             `INSERT INTO conferences (
                 config_id,
+                user_id,
                 short_title,
                 long_title,
                 research_domain,
@@ -197,7 +187,7 @@ app.post("/submit-conference",auth,async(req,res)=>{
                 abs_timezone,
                 paper_timezone
             )
-            VALUES ($1,$2,$3,$4,$5,$6,$7)
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
             ON CONFLICT (config_id)
             DO UPDATE SET
                 short_title = COALESCE(EXCLUDED.short_title, conferences.short_title),
@@ -208,6 +198,7 @@ app.post("/submit-conference",auth,async(req,res)=>{
                 paper_timezone = COALESCE(EXCLUDED.paper_timezone, conferences.paper_timezone)`,
             [
                 config_id,
+                req.userId,
                 meta.short_title || null,
                 meta.long_title || null,
                 meta.research_domain || null,
@@ -241,7 +232,12 @@ app.post("/signup",async(req,res)=>{
         "INSERT INTO users(email,password_hash) VALUES($1,$2) RETURNING id",
         [email, hash]
         )
-        res.json({success:true,userId:user.rows[0].id})
+        const token = jwt.sign(
+            {userId: user.rows[0].id},
+            process.env.JWT_SECRET_KEY,
+            {expiresIn:"7d"}
+        )
+        res.json({success:true,token})
     }
     catch(err){
         if(err.code === "23505"){
