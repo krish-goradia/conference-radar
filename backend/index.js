@@ -16,6 +16,17 @@ app.get("/",(req,res)=>{
     res.send("Backend Running")
 })
 
+app.get("/users", async (req,res)=>{
+    try{
+        const result = await pool.query("SELECT * FROM USERS");
+        res.json(result.rows);
+    }
+    catch (err){
+        res.status(500).json({error: err.message,success:false});
+
+    }
+})
+
 app.get("/conferences", async (req,res)=>{
     try{
         const result = await pool.query("SELECT * FROM CONFERENCES");
@@ -69,8 +80,8 @@ app.get("/confgetbyid",auth,async(req,res)=>{
              FROM scrape_configs sc
              LEFT JOIN conferences c
              ON c.config_id = sc.id
-             WHERE sc.conf_ext_id = $1`,
-            [conf_ext_id]
+             WHERE sc.conf_ext_id = $1 AND c.user_id = $2`,
+            [conf_ext_id, req.userId]
         );
         if (result.rowCount==0) return res.json({exists:false});
         const row = result.rows[0];
@@ -113,10 +124,11 @@ app.get("/autocomplete/keywords",auth,async(req,res)=>{
             FROM (
                 SELECT unnest(keywords) AS kw
                 FROM conferences
+                WHERE user_id = $2
             ) t
             WHERE LOWER(kw) LIKE LOWER($1)
             LIMIT 10
-        `, [`%${q}%`]);
+        `, [`%${q}%`, req.userId]);
 
         res.json(result.rows.map(r => r.kw));
     }
