@@ -292,5 +292,54 @@ app.post("/login",async(req,res)=>{
     }
 })
 
+// Get user's conferences with search and filter
+app.get("/my-conferences", auth, async (req, res) => {
+    try {
+        const { search, filterBy, filterValue } = req.query;
+        let query = `
+            SELECT 
+                sc.id as config_id,
+                sc.conf_ext_id,
+                sc.conf_url,
+                c.short_title,
+                c.long_title,
+                c.research_domain,
+                c.keywords,
+                c.abs_time,
+                c.paper_time
+            FROM conferences c
+            LEFT JOIN scrape_configs sc ON c.config_id = sc.id
+            WHERE c.user_id = $1
+        `;
+        let params = [req.userId];
+        let paramIndex = 2;
+
+        // Search by keyword
+        if (search) {
+            query += ` AND (
+                LOWER(c.short_title) LIKE LOWER($${paramIndex}) 
+                OR LOWER(c.long_title) LIKE LOWER($${paramIndex})
+                OR LOWER(c.research_domain) LIKE LOWER($${paramIndex})
+            )`;
+            params.push(`%${search}%`);
+            paramIndex++;
+        }
+
+        // Filter by deadline type
+        if (filterBy === 'abs_deadline' && filterValue) {
+            query += ` AND c.abs_time <= NOW() + INTERVAL '${filterValue}'`;
+        } else if (filterBy === 'paper_deadline' && filterValue) {
+            query += ` AND c.paper_time <= NOW() + INTERVAL '${filterValue}'`;
+        }
+
+        query += ` ORDER BY c.abs_time ASC NULLS LAST`;
+
+        const result = await pool.query(query, params);
+        res.json({ success: true, conferences: result.rows });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+})
 
 
