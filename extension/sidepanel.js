@@ -133,6 +133,7 @@ document.getElementById("confirmLogout").addEventListener("click", async () => {
     document.getElementById("email").value = "";
     document.getElementById("password").value = "";
     document.getElementById("error").textContent = "";
+    document.getElementById("confirmPassword").value = "";
 });
 
 // Close modal when clicking outside (on the backdrop)
@@ -536,6 +537,19 @@ document.addEventListener("click", (e) => {
         kwSuggestions.innerHTML = "";
     }
 });
+
+chrome.runtime.onMessage.addListener((msg)=>{
+    if(msg.type !== "AUTH_EXPIRED") return;
+    showAuthView();
+    document.getElementById("email").value = "";
+    document.getElementById("password").value = "";
+    document.getElementById("confirmPassword").value = "";
+    document.getElementById("confirmPasswordGroup").style.display = "none";
+    document.getElementById("error").textContent = "Session expired. Please log in again.";
+});
+
+
+
 
 
 initAuth();

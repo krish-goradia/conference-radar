@@ -11,6 +11,10 @@ async function getConferenceStatefromDB(identifier){
         const res = await fetch(`http://localhost:5000/confgetbyid?conf_ext_id=${identifier}`, {
                 headers: { "Authorization": `Bearer ${token}` }
         });
+        if(res.status ===401){
+            await handleAuthExpiry();
+            return {success:false};
+        }
         const data = await res.json();
         return data;
     }
@@ -130,6 +134,10 @@ chrome.runtime.onMessage.addListener(async (msg) => {
             })
 
         });
+        if(res.status ===401){
+            await handleAuthExpiry();
+            return {success:false};
+        }
         const result = await res.json();
         if(result.success){
             console.log("saved to db", confer_id);
@@ -157,20 +165,27 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 async function handleFetchKeywords(query, sendResponse) {
     try {
         const { token } = await chrome.storage.local.get("token");
-
-        const res = await fetch(
-            `http://localhost:5000/autocomplete/keywords?q=${encodeURIComponent(query)}`,
-            {
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                }
+        const res = await fetch(`http://localhost:5000/autocomplete/keywords?q=${encodeURIComponent(query)}`,{
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
             }
         );
-
+        if(res.status ===401){
+            await handleAuthExpiry();
+            return {success:false};
+        }
         const data = await res.json();
         sendResponse(data);
-
     } catch (err) {
         sendResponse([]);
     }
+}
+
+async function handleAuthExpiry(){
+    await chrome.storage.local.remove("token")
+    const allItems = await chrome.storage.local.get(null);
+    const keystoRemove = Object.keys(allItems).filter(k=>k!=="token");
+    if(keystoRemove.length>0) await chrome.storage.local.remove(keystoRemove);
+    chrome.runtime.sendMessage({type:"AUTH_EXPIRED"});
 }
