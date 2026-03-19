@@ -146,3 +146,31 @@ chrome.runtime.onMessage.addListener(async (msg) => {
         chrome.runtime.sendMessage({ type: "SUBMIT_RESULT", success: false });
     }
 });
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === "FETCH_KEYWORDS") {
+        handleFetchKeywords(message.query, sendResponse);
+        return true;
+    }
+});
+
+async function handleFetchKeywords(query, sendResponse) {
+    try {
+        const { token } = await chrome.storage.local.get("token");
+
+        const res = await fetch(
+            `http://localhost:5000/autocomplete/keywords?q=${encodeURIComponent(query)}`,
+            {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            }
+        );
+
+        const data = await res.json();
+        sendResponse(data);
+
+    } catch (err) {
+        sendResponse([]);
+    }
+}

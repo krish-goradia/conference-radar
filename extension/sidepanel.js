@@ -480,26 +480,31 @@ kwInput.addEventListener("keydown", (e) => {
 kwInput.addEventListener("input", () => {
     clearTimeout(kwDebounce);
     const q = kwInput.value.trim();
+
     if (q.length < 1) {
         kwSuggestions.innerHTML = "";
         return;
     }
+
     kwDebounce = setTimeout(async () => {
         try {
-            const{token} = await chrome.storage.local.get("token");
-            const res = await fetch(`http://localhost:5000/autocomplete/keywords?q=${encodeURIComponent(q)}`, {
-                headers: { "Authorization": `Bearer ${token}` }
+            const items = await chrome.runtime.sendMessage({
+                type: "FETCH_KEYWORDS",
+                query: q
             });
 
-            const items = await res.json();
             kwSuggestions.innerHTML = "";
-            items.filter(item => !keywordsList.includes(item)).forEach(item => {
-                const div = document.createElement("div");
-                div.className = "suggestion-item";
-                div.textContent = item;
-                div.addEventListener("click", () => addKeyword(item));
-                kwSuggestions.appendChild(div);
-            });
+
+            items
+                .filter(item => !keywordsList.includes(item))
+                .forEach(item => {
+                    const div = document.createElement("div");
+                    div.className = "suggestion-item";
+                    div.textContent = item;
+                    div.addEventListener("click", () => addKeyword(item));
+                    kwSuggestions.appendChild(div);
+                });
+
         } catch (err) {
             kwSuggestions.innerHTML = "";
         }
