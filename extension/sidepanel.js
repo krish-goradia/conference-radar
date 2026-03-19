@@ -25,10 +25,13 @@ authTabs.forEach(tab => {
         const action = tab.dataset.tab;
         authTabs.forEach(t => t.classList.remove("active"));
         tab.classList.add("active");
+        const confirmPasswordGroup = document.getElementById("confirmPasswordGroup");
         if(action === "login") {
             loginBtn.textContent = "Sign In";
+            confirmPasswordGroup.style.display = "none";
         } else {
             loginBtn.textContent = "Create Account";
+            confirmPasswordGroup.style.display = "flex";
         }
         loginBtn.dataset.action = action;
     });
@@ -56,12 +59,25 @@ function showMainView(){
 loginBtn.addEventListener("click",()=>{
     const email = document.getElementById("email").value.trim()
     const password = document.getElementById("password").value.trim()
+    const confirmPassword = document.getElementById("confirmPassword").value.trim()
     const action = loginBtn.dataset.action || "login"
     document.getElementById("error").textContent = "";
     
     if(!email || !password) {
         document.getElementById("error").textContent = "Please fill in all fields"
         return
+    }
+    
+    // For signup, validate that passwords match
+    if(action === "signup") {
+        if(!confirmPassword) {
+            document.getElementById("error").textContent = "Please confirm your password"
+            return
+        }
+        if(password !== confirmPassword) {
+            document.getElementById("error").textContent = "Passwords do not match"
+            return
+        }
     }
     
     chrome.runtime.sendMessage({type:"AUTH_REQUEST", action: action, email, password})
@@ -73,6 +89,10 @@ document.getElementById("email")?.addEventListener("keypress", (e) => {
 })
 
 document.getElementById("password")?.addEventListener("keypress", (e) => {
+    if(e.key === "Enter") loginBtn.click()
+})
+
+document.getElementById("confirmPassword")?.addEventListener("keypress", (e) => {
     if(e.key === "Enter") loginBtn.click()
 })
 
