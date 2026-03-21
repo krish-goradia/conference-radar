@@ -1,3 +1,4 @@
+
 import dotenv from "dotenv"
 dotenv.config()
 import express from "express"
@@ -617,8 +618,8 @@ app.get("/user/:userId/info", async (req, res) => {
     }
 });
 
-// Get user's public conferences (requires auth to view, but shows anyone's conferences)
-app.get("/user/:userId/conferences", auth, async (req, res) => {
+// Get user's conferences (public - anyone can view shared dashboards)
+app.get("/user/:userId/conferences", async (req, res) => {
     try {
         const { userId } = req.params;
         const { search, filterBy, filterValue } = req.query;
@@ -689,4 +690,123 @@ app.get("/user/:userId/conferences", auth, async (req, res) => {
     }
 });
 
+// Add a dashboard to user's saved dashboards
+app.post("/add-dashboard", auth, async (req, res) => {
+    try {
+        const { savedUserId } = req.body;
+        
+        if (!savedUserId) {
+            return res.status(400).json({ success: false, error: "savedUserId is required" });
+        }
 
+        // Check if the dashboard already exists for this user
+        const checkResult = await pool.query(
+            "SELECT id FROM user_saved_dashboards WHERE user_id = $1 AND saved_user_id = $2",
+            [req.userId, savedUserId]
+        );
+
+        if (checkResult.rows.length > 0) {
+            return res.status(400).json({ success: false, error: "Dashboard already saved" });
+        }
+
+        // Check if the saved user exists
+        const userCheck = await pool.query("SELECT id FROM users WHERE id = $1", [savedUserId]);
+        if (userCheck.rows.length === 0) {
+            return res.status(404).json({ success: false, error: "User not found" });
+        }
+
+        // Add the saved dashboard
+        await pool.query(
+            "INSERT INTO user_saved_dashboards (user_id, saved_user_id) VALUES ($1, $2)",
+            [req.userId, savedUserId]
+        );
+
+        res.json({ success: true, message: "Dashboard added successfully" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Get user's saved dashboards
+app.get("/saved-dashboards", auth, async (req, res) => {
+    try {
+        const result = await pool.query(
+            `SELECT u.id, u.email FROM user_saved_dashboards usd
+             JOIN users u ON usd.saved_user_id = u.id
+             WHERE usd.user_id = $1
+             ORDER BY usd.created_at DESC`,
+            [req.userId]
+        );
+
+        res.json({ success: true, dashboards: result.rows });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Remove a saved dashboard
+app.delete("/remove-dashboard/:savedUserId", auth, async (req, res) => {
+    try {
+        const { savedUserId } = req.params;
+
+        const result = await pool.query(
+            "DELETE FROM user_saved_dashboards WHERE user_id = $1 AND saved_user_id = $2 RETURNING id",
+            [req.userId, savedUserId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: "Saved dashboard not found" });
+        }
+
+        res.json({ success: true, message: "Dashboard removed successfully" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Public: Get research domains and keywords for any user (for shared dashboard)
+app.get("/user/:userId/research-domains", async (req, res) => {
+    try {
+        const { userId } = req.params;
+        // Check user exists
+        const userCheck = await pool.query("SELECT id FROM users WHERE id = $1", [userId]);
+        if (userCheck.rows.length === 0) {
+            return res.status(404).json({ success: false, error: "User not found" });
+        }
+
+        const result = await pool.query(`
+            SELECT DISTINCT research_domain
+            FROM conferences
+            WHERE user_id = $1 AND research_domain IS NOT NULL
+            ORDER BY research_domain
+        `, [userId]);
+
+        const domainsList = result.rows.map(r => r.research_domain);
+        // For each domain, get keywords
+        const domainsWithKeywords = await Promise.all(
+            domainsList.map(async (domain) => {
+                const keywordResult = await pool.query(`
+                    SELECT DISTINCT kw
+                    FROM (
+                        SELECT unnest(keywords) AS kw
+                        FROM conferences
+                        WHERE user_id = $1 AND research_domain = $2 AND keywords IS NOT NULL
+                    ) t
+                    ORDER BY kw
+                `, [userId, domain]);
+                return {
+                    domain,
+                    keywords: keywordResult.rows.map(r => r.kw)
+                };
+            })
+        );
+
+        res.json({ success: true, researchDomains: domainsWithKeywords });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
