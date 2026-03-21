@@ -1,25 +1,9 @@
+import { formatDateInServerTimezone, daysUntilDeadlineServerTZ } from '../utils/timezone';
 import '../styles/components.css';
 
 export default function ConferenceCard({ conference }) {
-  const formatDate = (date) => {
-    if (!date) return 'N/A';
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
-  const daysUntilDeadline = (deadline) => {
-    if (!deadline) return null;
-    const days = Math.ceil(
-      (new Date(deadline) - new Date()) / (1000 * 60 * 60 * 24)
-    );
-    return days;
-  };
-
-  const absDeadlineDays = daysUntilDeadline(conference.abs_time);
-  const paperDeadlineDays = daysUntilDeadline(conference.paper_time);
+  const absDeadlineDays = daysUntilDeadlineServerTZ(conference.abs_time);
+  const paperDeadlineDays = daysUntilDeadlineServerTZ(conference.paper_time);
 
   const getDeadlineColor = (days) => {
     if (!days) return '';
@@ -40,7 +24,7 @@ export default function ConferenceCard({ conference }) {
           className="external-link"
           title="Visit conference website"
         >
-          🔗
+          Link
         </a>
       </div>
 
@@ -70,7 +54,7 @@ export default function ConferenceCard({ conference }) {
         {conference.abs_time && (
           <div className={`deadline ${getDeadlineColor(absDeadlineDays)}`}>
             <span className="deadline-label">Abstract Deadline</span>
-            <span className="deadline-date">{formatDate(conference.abs_time)}</span>
+            <span className="deadline-date">{formatDateInServerTimezone(conference.abs_time)}</span>
             {absDeadlineDays !== null && (
               <span className="deadline-days">
                 {absDeadlineDays < 0 ? `${Math.abs(absDeadlineDays)} days ago` : `${absDeadlineDays} days left`}
@@ -82,7 +66,7 @@ export default function ConferenceCard({ conference }) {
         {conference.paper_time && (
           <div className={`deadline ${getDeadlineColor(paperDeadlineDays)}`}>
             <span className="deadline-label">Paper Deadline</span>
-            <span className="deadline-date">{formatDate(conference.paper_time)}</span>
+            <span className="deadline-date">{formatDateInServerTimezone(conference.paper_time)}</span>
             {paperDeadlineDays !== null && (
               <span className="deadline-days">
                 {paperDeadlineDays < 0 ? `${Math.abs(paperDeadlineDays)} days ago` : `${paperDeadlineDays} days left`}

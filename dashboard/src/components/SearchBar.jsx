@@ -33,7 +33,6 @@ export default function SearchBar({
           onFocus={() => value.length >= 2 && onShowSuggestions(true)}
           className="search-input"
         />
-        <span className="search-icon">🔍</span>
 
         {showSuggestions && suggestions.length > 0 && (
           <div className="autocomplete-dropdown">
