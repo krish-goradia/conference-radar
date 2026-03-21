@@ -35,12 +35,32 @@ export const authAPI = {
 };
 
 export const conferencesAPI = {
-  getMyConferences: (search = '', filterBy = '', filterValue = '') =>
+  getMyConferences: (search = '', filterBy = '', filterValue = '', selectedDomains = [], selectedKeywords = []) =>
     api.get('/my-conferences', {
-      params: { search, filterBy, filterValue },
+      params: { 
+        search, 
+        filterBy, 
+        filterValue,
+        selectedDomains: selectedDomains.length > 0 ? JSON.stringify(selectedDomains) : undefined,
+        selectedKeywords: selectedKeywords.length > 0 ? JSON.stringify(selectedKeywords) : undefined
+      },
     }),
+  getResearchDomains: () =>
+    api.get('/research-domains'),
+  getSearchAutocomplete: (q) =>
+    api.get('/autocomplete/search', { params: { q } }),
   getKeywordAutocomplete: (q) =>
     api.get('/autocomplete/keywords', { params: { q } }),
+  getTitleAutocomplete: (q) =>
+    api.get('/autocomplete/titles', { params: { q } }),
+  getDomainAutocomplete: (q) =>
+    api.get('/autocomplete/domains', { params: { q } }),
+  getUserConferences: (userId, search = '', filterBy = '', filterValue = '') =>
+    api.get(`/user/${userId}/conferences`, {
+      params: { search, filterBy, filterValue },
+    }),
+  getUserInfo: (userId) =>
+    api.get(`/user/${userId}/info`),
 };
 
 export default api;
