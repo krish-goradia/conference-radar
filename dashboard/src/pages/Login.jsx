@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import '../styles/auth.css';
 
@@ -11,6 +11,10 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  // Get redirect param from URL
+  const params = new URLSearchParams(location.search);
+  const redirect = params.get('redirect');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,7 +42,11 @@ export default function Login() {
 
       if (response.data.success) {
         localStorage.setItem('authToken', response.data.token);
-        navigate('/dashboard');
+        if (redirect) {
+          navigate(redirect);
+        } else {
+          navigate('/dashboard');
+        }
       } else {
         setError(response.data.error || 'Authentication failed');
       }

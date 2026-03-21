@@ -1,3 +1,34 @@
+/* Make the hierarchical filter panel wider */
+.hierarchical-filter-panel {
+  min-width: 270px;
+}
+/* New 3-column dashboard layout */
+.new-dashboard-layout {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+}
+
+
+.dashboard-main {
+  flex: 2;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 1100px) {
+  .new-dashboard-layout {
+    flex-direction: column;
+  }
+  .left-sidebar,
+  .right-sidebar {
+    width: 100%;
+    flex-direction: row;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+}
 /* Dashboard Styles */
 .dashboard-container {
   display: flex;
@@ -11,7 +42,7 @@
   display: flex;
   flex: 1;
   gap: 20px;
-  max-width: 1400px;
+  max-width: 1900px;
   margin: 0 auto;
   padding: 24px;
   width: 100%;

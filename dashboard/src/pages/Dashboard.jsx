@@ -5,6 +5,7 @@ import ConferenceTable from '../components/ConferenceTable';
 import SearchBar from '../components/SearchBar';
 import FilterPanel from '../components/FilterPanel';
 import HierarchicalFilterPanel from '../components/HierarchicalFilterPanel';
+import SavedDashboardsList from '../components/SavedDashboardsList';
 import ShareModal from '../components/ShareModal';
 import '../styles/dashboard.css';
 
@@ -143,8 +144,9 @@ export default function Dashboard() {
         onClose={() => setShowShareModal(false)} 
       />
 
-      <div className="dashboard-wrapper">
-        <aside className="filter-sidebar">
+      <div className="dashboard-wrapper new-dashboard-layout">
+        {/* Left Sidebar: HierarchicalFilterPanel */}
+        <aside className="left-sidebar">
           <HierarchicalFilterPanel
             selectedDomains={selectedDomains}
             selectedKeywords={selectedKeywords}
@@ -154,6 +156,7 @@ export default function Dashboard() {
           />
         </aside>
 
+        {/* Center: Main Results */}
         <main className="dashboard-main">
           <div className="controls-section">
             <SearchBar
@@ -191,6 +194,11 @@ export default function Dashboard() {
             <ConferenceTable conferences={conferences} />
           )}
         </main>
+
+        {/* Right Sidebar: SavedDashboardsList */}
+        <aside className="right-sidebar">
+          <SavedDashboardsList />
+        </aside>
       </div>
     </div>
   );

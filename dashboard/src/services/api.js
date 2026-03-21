@@ -21,7 +21,13 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('authToken');
-      window.location.href = '/';
+      // Only redirect if not on a public route
+      const publicRoutes = [/^\/?$/, /^\/user\//];
+      const currentPath = window.location.pathname;
+      const isPublic = publicRoutes.some((re) => re.test(currentPath));
+      if (!isPublic) {
+        window.location.href = '/';
+      }
     }
     return Promise.reject(error);
   }
@@ -47,6 +53,8 @@ export const conferencesAPI = {
     }),
   getResearchDomains: () =>
     api.get('/research-domains'),
+  getUserResearchDomains: (userId) =>
+    api.get(`/user/${userId}/research-domains`),
   getSearchAutocomplete: (q) =>
     api.get('/autocomplete/search', { params: { q } }),
   getKeywordAutocomplete: (q) =>
@@ -61,6 +69,12 @@ export const conferencesAPI = {
     }),
   getUserInfo: (userId) =>
     api.get(`/user/${userId}/info`),
+  saveDashboard: (savedUserId) =>
+    api.post('/add-dashboard', { savedUserId }),
+  getSavedDashboards: () =>
+    api.get('/saved-dashboards'),
+  removeSavedDashboard: (savedUserId) =>
+    api.delete(`/remove-dashboard/${savedUserId}`),
 };
 
 export default api;

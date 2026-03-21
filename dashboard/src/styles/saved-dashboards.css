@@ -1,0 +1,99 @@
+.saved-dashboards-section {
+  padding: 16px 0;
+  border-top: 1px solid #e0e0e0;
+  margin-top: 16px;
+}
+
+.saved-dashboards-section.loading {
+  text-align: center;
+  color: #999;
+  font-size: 13px;
+  padding: 20px 0;
+}
+
+.section-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  transition: all 0.3s ease;
+  text-align: left;
+}
+
+.section-header:hover {
+  background-color: #f0f0f0;
+  border-radius: 4px;
+}
+
+.toggle-arrow {
+  display: inline-block;
+  width: 16px;
+  font-size: 12px;
+  transition: transform 0.3s ease;
+}
+
+.section-title {
+  flex: 1;
+}
+
+.saved-dashboards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px;
+}
+
+.saved-dashboard-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #f9f9f9;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #333;
+  transition: all 0.3s ease;
+  text-align: left;
+}
+
+.saved-dashboard-item:hover {
+  background: #e8f4f8;
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.dashboard-email {
+  flex: 1;
+  word-break: break-all;
+}
+
+.arrow {
+  margin-left: 8px;
+  opacity: 0.6;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  font-size: 12px;
+}
+
+.saved-dashboard-item:hover .arrow {
+  opacity: 1;
+  transform: translateX(4px);
+}
+
+.error-message {
+  padding: 12px;
+  background: #ffe8e8;
+  border: 1px solid #ffcccc;
+  border-radius: 4px;
+  color: #d32f2f;
+  font-size: 12px;
+  text-align: center;
+}

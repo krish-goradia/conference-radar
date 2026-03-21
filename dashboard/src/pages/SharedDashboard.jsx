@@ -4,6 +4,9 @@ import { conferencesAPI } from '../services/api';
 import ConferenceTable from '../components/ConferenceTable';
 import SearchBar from '../components/SearchBar';
 import FilterPanel from '../components/FilterPanel';
+import SaveDashboardButton from '../components/SaveDashboardButton';
+import HierarchicalFilterPanel from '../components/HierarchicalFilterPanel';
+import SavedDashboardsList from '../components/SavedDashboardsList';
 import '../styles/dashboard.css';
 
 export default function SharedDashboard() {
@@ -16,16 +19,17 @@ export default function SharedDashboard() {
   const [search, setSearch] = useState('');
   const [filterBy, setFilterBy] = useState('');
   const [filterValue, setFilterValue] = useState('');
+  const [selectedDomains, setSelectedDomains] = useState([]);
+  const [selectedKeywords, setSelectedKeywords] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Check authentication
+  // Check if user is logged in
   useEffect(() => {
     const token = localStorage.getItem('authToken');
-    if (!token) {
-      navigate('/');
-    }
-  }, [navigate]);
+    setIsLoggedIn(!!token);
+  }, []);
 
   // Fetch user info
   useEffect(() => {
@@ -56,7 +60,9 @@ export default function SharedDashboard() {
           userId,
           search,
           filterBy,
-          filterValue
+          filterValue,
+          selectedDomains,
+          selectedKeywords
         );
         if (response.data.success) {
           setConferences(response.data.conferences);
@@ -76,7 +82,7 @@ export default function SharedDashboard() {
     }, 300);
 
     return () => clearTimeout(debounceTimer);
-  }, [userId, search, filterBy, filterValue]);
+  }, [userId, search, filterBy, filterValue, selectedDomains, selectedKeywords]);
 
   // Fetch autocomplete suggestions
   useEffect(() => {
@@ -101,6 +107,13 @@ export default function SharedDashboard() {
     return () => clearTimeout(debounceTimer);
   }, [search]);
 
+  const handleClearAllFilters = () => {
+    setFilterBy('');
+    setFilterValue('');
+    setSelectedDomains([]);
+    setSelectedKeywords([]);
+  };
+
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
@@ -109,49 +122,72 @@ export default function SharedDashboard() {
             <h1>📡 {userInfo?.email || 'User'}'s Conferences</h1>
             <p className="shared-badge">↗ Shared Dashboard</p>
           </div>
-          <button onClick={() => navigate('/dashboard')} className="logout-btn">
-            My Dashboard
-          </button>
+          <div className="header-actions">
+            <SaveDashboardButton 
+              savedUserId={userId}
+              isLoggedIn={isLoggedIn}
+              onSaveSuccess={() => {
+                // Could refresh something here if needed
+              }}
+            />
+            <button onClick={() => navigate('/dashboard')} className="logout-btn">
+              My Dashboard
+            </button>
+          </div>
         </div>
       </header>
 
-      <main className="dashboard-main">
-        <div className="controls-section">
-          <SearchBar
-            value={search}
-            onChange={setSearch}
-            suggestions={suggestions}
-            showSuggestions={showSuggestions}
-            onShowSuggestions={setShowSuggestions}
-            onSelectSuggestion={(suggestion) => {
-              setSearch(suggestion);
-              setShowSuggestions(false);
-            }}
+      <div className="dashboard-wrapper">
+        <aside className="filter-sidebar">
+          <SavedDashboardsList />
+          <HierarchicalFilterPanel
+            selectedDomains={selectedDomains}
+            selectedKeywords={selectedKeywords}
+            onSelectedDomainsChange={setSelectedDomains}
+            onSelectedKeywordsChange={setSelectedKeywords}
+            onClearFilters={handleClearAllFilters}
+            userId={userId}
           />
+        </aside>
 
-          <FilterPanel
-            filterBy={filterBy}
-            filterValue={filterValue}
-            onFilterByChange={setFilterBy}
-            onFilterValueChange={setFilterValue}
-          />
-        </div>
+        <main className="dashboard-main">
+          <div className="controls-section">
+            <SearchBar
+              value={search}
+              onChange={setSearch}
+              suggestions={suggestions}
+              showSuggestions={showSuggestions}
+              onShowSuggestions={setShowSuggestions}
+              onSelectSuggestion={(suggestion) => {
+                setSearch(suggestion);
+                setShowSuggestions(false);
+              }}
+            />
 
-        {error && <div className="error-banner">{error}</div>}
-
-        {loading ? (
-          <div className="loading-spinner">
-            <p>Loading conferences...</p>
+            <FilterPanel
+              filterBy={filterBy}
+              filterValue={filterValue}
+              onFilterByChange={setFilterBy}
+              onFilterValueChange={setFilterValue}
+            />
           </div>
-        ) : conferences.length === 0 ? (
-          <div className="empty-state">
-            <p>No conferences found</p>
-            <small>Try adjusting your filters or search query</small>
-          </div>
-        ) : (
-          <ConferenceTable conferences={conferences} />
-        )}  
-      </main>
+
+          {error && <div className="error-banner">{error}</div>}
+
+          {loading ? (
+            <div className="loading-spinner">
+              <p>Loading conferences...</p>
+            </div>
+          ) : conferences.length === 0 ? (
+            <div className="empty-state">
+              <p>No conferences found</p>
+              <small>Try adjusting your filters or search query</small>
+            </div>
+          ) : (
+            <ConferenceTable conferences={conferences} />
+          )}
+        </main>
+      </div>
     </div>
   );
 }

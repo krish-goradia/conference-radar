@@ -8,6 +8,7 @@ export default function HierarchicalFilterPanel({
   onSelectedDomainsChange,
   onSelectedKeywordsChange,
   onClearFilters,
+  userId = null, // If set, fetch public research domains for this user
 }) {
   const [researchDomains, setResearchDomains] = useState([]);
   const [expandedDomains, setExpandedDomains] = useState(new Set());
@@ -20,7 +21,12 @@ export default function HierarchicalFilterPanel({
       setLoading(true);
       setError('');
       try {
-        const response = await conferencesAPI.getResearchDomains();
+        let response;
+        if (userId) {
+          response = await conferencesAPI.getUserResearchDomains(userId);
+        } else {
+          response = await conferencesAPI.getResearchDomains();
+        }
         if (response.data.success) {
           setResearchDomains(response.data.researchDomains);
         } else {
@@ -33,9 +39,8 @@ export default function HierarchicalFilterPanel({
         setLoading(false);
       }
     };
-
     fetchDomains();
-  }, []);
+  }, [userId]);
 
   const toggleDomainExpand = (domain) => {
     const newExpanded = new Set(expandedDomains);

@@ -24,7 +24,7 @@ export default function ShareModal({ userId, isOpen, onClose }) {
 
         <div className="modal-body">
           <p className="modal-description">
-            Share your conference list with others. They'll need an account to view.
+            Share your conference list with anyone. No account is required to view your dashboard.
           </p>
 
           <div className="share-url-section">
@@ -48,7 +48,7 @@ export default function ShareModal({ userId, isOpen, onClose }) {
 
           <div className="share-privacy">
             <p className="privacy-note">
-              <strong>Privacy:</strong> Only people with an account can view your shared dashboard.
+              <strong>Privacy:</strong> Anyone with the link can view your shared dashboard (public viewing).
             </p>
           </div>
         </div>
