@@ -12,8 +12,63 @@ const  app = express()
 app.use(cors())
 app.use(express.json())
 
+// Timezone conversion utility
+function getServerTimezoneOffset() {
+  const offsetMinutes = new Date().getTimezoneOffset();
+  const offsetHours = -offsetMinutes / 60;
+  return offsetHours;
+}
+
+function convertUTCToServerTimezone(utcDate) {
+  if (!utcDate) return null;
+  
+  const date = new Date(utcDate);
+  const serverOffset = getServerTimezoneOffset();
+  
+  const utcTime = date.getTime();
+  const serverOffsetMs = serverOffset * 60 * 60 * 1000;
+  const serverDate = new Date(utcTime + serverOffsetMs);
+  
+  return serverDate;
+}
+
+function formatDateAsString(date) {
+  if (!date) return null;
+  const d = new Date(date);
+  return d.toISOString().split('T')[0]; // YYYY-MM-DD format
+}
+
+function formatTimeAsString(date, timezone) {
+  if (!date) return null;
+  const d = new Date(date);
+  const hours = String(d.getUTCHours()).padStart(2, '0');
+  const minutes = String(d.getUTCMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
+
+function convertConferenceForDisplay(conference) {
+  return {
+    ...conference,
+    // Only convert deadline date columns (stored in UTC)
+    abs_deadline: conference.abs_deadline ? formatDateAsString(convertUTCToServerTimezone(conference.abs_deadline)) : null,
+    paper_deadline: conference.paper_deadline ? formatDateAsString(convertUTCToServerTimezone(conference.paper_deadline)) : null,
+    confer_date: conference.confer_date ? formatDateAsString(convertUTCToServerTimezone(conference.confer_date)) : null
+    // All other fields returned as-is from database
+  };
+}
+
 app.get("/",(req,res)=>{
     res.send("Backend Running")
+})
+
+// Get server timezone offset
+app.get("/server-timezone", (req, res) => {
+    try {
+        const offset = getServerTimezoneOffset();
+        res.json({ success: true, offset });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
 })
 
 app.get("/users", async (req,res)=>{
@@ -133,6 +188,110 @@ app.get("/autocomplete/keywords",auth,async(req,res)=>{
         res.json(result.rows.map(r => r.kw));
     }
     catch(err){
+        res.status(500).json({error:err.message});
+    }
+});
+
+// endpoint for combined autocomplete (titles, domains, and keywords)
+app.get("/autocomplete/search",auth,async(req,res)=>{
+    try{
+        const q = req.query.q || "";
+        
+        const [keywordsResult, titlesResult, domainsResult] = await Promise.all([
+            pool.query(`
+                SELECT DISTINCT kw AS value, 'keyword' AS type
+                FROM (
+                    SELECT unnest(keywords) AS kw
+                    FROM conferences
+                    WHERE user_id = $2
+                ) t
+                WHERE LOWER(kw) LIKE LOWER($1)
+                LIMIT 5
+            `, [`%${q}%`, req.userId]),
+            pool.query(`
+                SELECT DISTINCT title AS value, 'title' AS type
+                FROM (
+                    SELECT short_title AS title FROM conferences WHERE user_id = $2 AND short_title IS NOT NULL
+                    UNION
+                    SELECT long_title AS title FROM conferences WHERE user_id = $2 AND long_title IS NOT NULL
+                ) t
+                WHERE LOWER(title) LIKE LOWER($1)
+                LIMIT 5
+            `, [`%${q}%`, req.userId]),
+            pool.query(`
+                SELECT DISTINCT research_domain AS value, 'domain' AS type
+                FROM conferences
+                WHERE user_id = $2 AND research_domain IS NOT NULL
+                AND LOWER(research_domain) LIKE LOWER($1)
+                LIMIT 5
+            `, [`%${q}%`, req.userId])
+        ]);
+
+        // Combine results and remove duplicates (case-insensitive)
+        const allResults = [
+            ...keywordsResult.rows,
+            ...titlesResult.rows,
+            ...domainsResult.rows
+        ];
+
+        // Deduplicate by value (case-insensitive)
+        const seen = new Set();
+        const deduplicated = allResults.filter(item => {
+            const key = item.value.toLowerCase();
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+
+        res.json(deduplicated);
+    }
+    catch(err){
+        console.error('Autocomplete search error:', err);
+        res.status(500).json({error:err.message});
+    }
+});
+
+// endpoint for autocomplete titles
+app.get("/autocomplete/titles",auth,async(req,res)=>{
+    try{
+        const q = req.query.q || "";
+        
+        const result = await pool.query(`
+            SELECT DISTINCT title
+            FROM (
+                SELECT short_title AS title FROM conferences WHERE user_id = $2 AND short_title IS NOT NULL
+                UNION
+                SELECT long_title AS title FROM conferences WHERE user_id = $2 AND long_title IS NOT NULL
+            ) t
+            WHERE LOWER(title) LIKE LOWER($1)
+            LIMIT 10
+        `, [`%${q}%`, req.userId]);
+
+        res.json(result.rows.map(r => r.title));
+    }
+    catch(err){
+        console.error('Autocomplete titles error:', err);
+        res.status(500).json({error:err.message});
+    }
+});
+
+// endpoint for autocomplete research domains
+app.get("/autocomplete/domains",auth,async(req,res)=>{
+    try{
+        const q = req.query.q || "";
+        
+        const result = await pool.query(`
+            SELECT DISTINCT research_domain
+            FROM conferences
+            WHERE user_id = $2 AND research_domain IS NOT NULL
+            AND LOWER(research_domain) LIKE LOWER($1)
+            LIMIT 10
+        `, [`%${q}%`, req.userId]);
+
+        res.json(result.rows.map(r => r.research_domain));
+    }
+    catch(err){
+        console.error('Autocomplete domains error:', err);
         res.status(500).json({error:err.message});
     }
 });
@@ -292,10 +451,49 @@ app.post("/login",async(req,res)=>{
     }
 })
 
+// Get user's research domains with keywords hierarchy
+app.get("/research-domains", auth, async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT DISTINCT research_domain
+            FROM conferences
+            WHERE user_id = $1 AND research_domain IS NOT NULL
+            ORDER BY research_domain
+        `, [req.userId]);
+
+        const domainsList = result.rows.map(r => r.research_domain);
+        
+        // For each domain, get keywords
+        const domainsWithKeywords = await Promise.all(
+            domainsList.map(async (domain) => {
+                const keywordResult = await pool.query(`
+                    SELECT DISTINCT kw
+                    FROM (
+                        SELECT unnest(keywords) AS kw
+                        FROM conferences
+                        WHERE user_id = $1 AND research_domain = $2 AND keywords IS NOT NULL
+                    ) t
+                    ORDER BY kw
+                `, [req.userId, domain]);
+                
+                return {
+                    domain,
+                    keywords: keywordResult.rows.map(r => r.kw)
+                };
+            })
+        );
+
+        res.json({ success: true, researchDomains: domainsWithKeywords });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // Get user's conferences with search and filter
 app.get("/my-conferences", auth, async (req, res) => {
     try {
-        const { search, filterBy, filterValue } = req.query;
+        const { search, filterBy, filterValue, selectedDomains, selectedKeywords } = req.query;
         let query = `
             SELECT 
                 sc.id as config_id,
@@ -305,8 +503,15 @@ app.get("/my-conferences", auth, async (req, res) => {
                 c.long_title,
                 c.research_domain,
                 c.keywords,
+                c.abs_deadline,
                 c.abs_time,
-                c.paper_time
+                c.abs_timezone,
+                c.paper_deadline,
+                c.paper_time,
+                c.paper_timezone,
+                c.confer_date,
+                c.confer_time,
+                c.confer_venue
             FROM conferences c
             LEFT JOIN scrape_configs sc ON c.config_id = sc.id
             WHERE c.user_id = $1
@@ -314,32 +519,174 @@ app.get("/my-conferences", auth, async (req, res) => {
         let params = [req.userId];
         let paramIndex = 2;
 
-        // Search by keyword
+        // Search by keyword (title, domain, and keywords)
         if (search) {
             query += ` AND (
                 LOWER(c.short_title) LIKE LOWER($${paramIndex}) 
                 OR LOWER(c.long_title) LIKE LOWER($${paramIndex})
                 OR LOWER(c.research_domain) LIKE LOWER($${paramIndex})
+                OR EXISTS (
+                    SELECT 1 FROM (
+                        SELECT UNNEST(c.keywords) AS kw
+                    ) expanded_keywords
+                    WHERE LOWER(expanded_keywords.kw) LIKE LOWER($${paramIndex})
+                )
             )`;
             params.push(`%${search}%`);
             paramIndex++;
         }
 
-        // Filter by deadline type
-        if (filterBy === 'abs_deadline' && filterValue) {
-            query += ` AND c.abs_time <= NOW() + INTERVAL '${filterValue}'`;
-        } else if (filterBy === 'paper_deadline' && filterValue) {
-            query += ` AND c.paper_time <= NOW() + INTERVAL '${filterValue}'`;
+        // Filter by research domains and keywords
+        const parsedDomains = selectedDomains ? (typeof selectedDomains === 'string' ? JSON.parse(selectedDomains) : selectedDomains) : [];
+        const parsedKeywords = selectedKeywords ? (typeof selectedKeywords === 'string' ? JSON.parse(selectedKeywords) : selectedKeywords) : [];
+
+        if (parsedDomains.length > 0 || parsedKeywords.length > 0) {
+            let filterParts = [];
+            
+            // If domains are selected, include them
+            if (parsedDomains.length > 0) {
+                const domainPlaceholders = parsedDomains.map(d => {
+                    params.push(d);
+                    return `$${paramIndex++}`;
+                }).join(',');
+                filterParts.push(`c.research_domain IN (${domainPlaceholders})`);
+            }
+
+            // If keywords are selected, include them
+            if (parsedKeywords.length > 0) {
+                const keywordPlaceholders = parsedKeywords.map(k => {
+                    params.push(k);
+                    return `$${paramIndex++}`;
+                }).join(',');
+                filterParts.push(`EXISTS (
+                    SELECT 1 FROM (
+                        SELECT UNNEST(c.keywords) AS kw
+                    ) expanded_keywords
+                    WHERE expanded_keywords.kw IN (${keywordPlaceholders})
+                )`);
+            }
+
+            if (filterParts.length > 0) {
+                query += ` AND (${filterParts.join(' OR ')})`;
+            }
         }
 
-        query += ` ORDER BY c.abs_time ASC NULLS LAST`;
+        // Filter by deadline type (by date only, not exact time)
+        if (filterBy === 'abs_deadline' && filterValue) {
+            query += ` AND c.abs_deadline <= CURRENT_DATE + INTERVAL '${filterValue}'`;
+        } else if (filterBy === 'paper_deadline' && filterValue) {
+            query += ` AND c.paper_deadline <= CURRENT_DATE + INTERVAL '${filterValue}'`;
+        }
+
+        query += ` ORDER BY c.abs_deadline ASC NULLS LAST`;
 
         const result = await pool.query(query, params);
-        res.json({ success: true, conferences: result.rows });
+        const convertedConferences = result.rows.map(conf => convertConferenceForDisplay(conf));
+        res.json({ success: true, conferences: convertedConferences });
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false, error: err.message });
     }
-})
+});
+
+// Get user's public profile info
+app.get("/user/:userId/info", async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const result = await pool.query(
+            "SELECT id, email, created_at FROM users WHERE id = $1",
+            [userId]
+        );
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, error: "User not found" });
+        }
+
+        const user = result.rows[0];
+        res.json({
+            success: true,
+            user: {
+                id: user.id,
+                email: user.email,
+                joinedDate: user.created_at,
+            },
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// Get user's public conferences (requires auth to view, but shows anyone's conferences)
+app.get("/user/:userId/conferences", auth, async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { search, filterBy, filterValue } = req.query;
+
+        // Verify user exists first
+        const userCheck = await pool.query("SELECT id FROM users WHERE id = $1", [userId]);
+        if (userCheck.rows.length === 0) {
+            return res.status(404).json({ success: false, error: "User not found" });
+        }
+
+        let query = `
+            SELECT 
+                sc.id as config_id,
+                sc.conf_ext_id,
+                sc.conf_url,
+                c.short_title,
+                c.long_title,
+                c.research_domain,
+                c.keywords,
+                c.abs_deadline,
+                c.abs_time,
+                c.abs_timezone,
+                c.paper_deadline,
+                c.paper_time,
+                c.paper_timezone,
+                c.confer_date,
+                c.confer_time,
+                c.confer_venue
+            FROM conferences c
+            LEFT JOIN scrape_configs sc ON c.config_id = sc.id
+            WHERE c.user_id = $1
+        `;
+        let params = [userId];
+        let paramIndex = 2;
+
+        // Search by keyword (title, domain, and keywords)
+        if (search) {
+            query += ` AND (
+                LOWER(c.short_title) LIKE LOWER($${paramIndex}) 
+                OR LOWER(c.long_title) LIKE LOWER($${paramIndex})
+                OR LOWER(c.research_domain) LIKE LOWER($${paramIndex})
+                OR EXISTS (
+                    SELECT 1 FROM (
+                        SELECT UNNEST(c.keywords) AS kw
+                    ) expanded_keywords
+                    WHERE LOWER(expanded_keywords.kw) LIKE LOWER($${paramIndex})
+                )
+            )`;
+            params.push(`%${search}%`);
+            paramIndex++;
+        }
+
+        // Filter by deadline type (by date only, not exact time)
+        if (filterBy === 'abs_deadline' && filterValue) {
+            query += ` AND c.abs_deadline <= CURRENT_DATE + INTERVAL '${filterValue}'`;
+        } else if (filterBy === 'paper_deadline' && filterValue) {
+            query += ` AND c.paper_deadline <= CURRENT_DATE + INTERVAL '${filterValue}'`;
+        }
+
+        query += ` ORDER BY c.abs_deadline ASC NULLS LAST`;
+
+        const result = await pool.query(query, params);
+        const convertedConferences = result.rows.map(conf => convertConferenceForDisplay(conf));
+        res.json({ success: true, conferences: convertedConferences });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
 
 
