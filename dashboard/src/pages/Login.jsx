@@ -53,7 +53,7 @@ export default function Login() {
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
-          <h1>📡 Conference Radar</h1>
+          <h1>Conference Radar</h1>
           <p>Track and manage conference submissions</p>
         </div>
 
