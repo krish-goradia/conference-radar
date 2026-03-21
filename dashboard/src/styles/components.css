@@ -309,3 +309,190 @@
     width: 100%;
   }
 }
+
+/* Hierarchical Filter Panel */
+.hierarchical-filter-panel {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: sticky;
+  top: 24px;
+}
+
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.filter-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.filter-loading,
+.filter-error,
+.filter-empty {
+  padding: 12px;
+  text-align: center;
+  font-size: 13px;
+  color: #999;
+  font-style: italic;
+}
+
+.filter-error {
+  color: #d32f2f;
+}
+
+.hierarchy-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hierarchy-item {
+  border: 1px solid #f0f0f0;
+  border-radius: 4px;
+  background: #fafafa;
+  overflow: hidden;
+}
+
+.hierarchy-parent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.expand-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #666;
+  display: inline-flex;
+  align-items: center;
+  min-width: 16px;
+  transition: color 0.2s ease;
+}
+
+.expand-btn:hover {
+  color: #333;
+}
+
+.parent-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  user-select: none;
+  margin: 0;
+}
+
+.parent-checkbox {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  accent-color: #667eea;
+}
+
+.domain-name {
+  flex: 1;
+}
+
+.keyword-count {
+  font-size: 11px;
+  color: #999;
+  font-weight: 400;
+}
+
+.hierarchy-children {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: white;
+  padding: 4px;
+}
+
+.hierarchy-child {
+  padding: 6px 8px 6px 32px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.hierarchy-child:last-child {
+  border-bottom: none;
+}
+
+.child-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #555;
+  user-select: none;
+  margin: 0;
+}
+
+.child-checkbox {
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+  accent-color: #4caf50;
+}
+
+.keyword-name {
+  flex: 1;
+}
+
+.filter-summary {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #e0e0e0;
+  font-size: 12px;
+  color: #666;
+}
+
+.filter-summary small {
+  display: block;
+  line-height: 1.6;
+}
+
+.filter-summary div {
+  color: #667eea;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .hierarchical-filter-panel {
+    max-height: 400px;
+    position: static;
+    top: auto;
+  }
+
+  .hierarchy-parent {
+    padding: 8px;
+  }
+
+  .hierarchy-child {
+    padding: 4px 8px 4px 28px;
+  }
+}
+

@@ -7,14 +7,24 @@
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.dashboard-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+.dashboard-wrapper {
+  display: flex;
+  flex: 1;
+  gap: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
   padding: 24px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  width: 100%;
+}
+
+.filter-sidebar {
+  width: 300px;
+  flex-shrink: 0;
+}
+
+.dashboard-main {
+  flex: 1;
+  min-width: 0;
 }
 
 .header-content {
@@ -26,11 +36,50 @@
   width: 100%;
 }
 
+.dashboard-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
 .dashboard-header h1 {
   margin: 0;
   font-size: 28px;
   font-weight: 700;
   letter-spacing: -0.5px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.share-btn {
+  padding: 8px 16px;
+  background: rgba(76, 175, 80, 0.2);
+  color: white;
+  border: 2px solid rgba(76, 175, 80, 0.8);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.share-btn:hover {
+  background: rgba(76, 175, 80, 0.3);
+  transform: translateY(-1px);
+}
+
+.share-btn:active {
+  transform: translateY(0);
 }
 
 .logout-btn {
@@ -56,12 +105,12 @@
   transform: translateY(0);
 }
 
-.dashboard-main {
-  flex: 1;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px;
-  width: 100%;
+.shared-badge {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+  font-weight: normal;
+  letter-spacing: 0;
 }
 
 .controls-section {
@@ -151,6 +200,16 @@
 }
 
 @media (max-width: 768px) {
+  .dashboard-wrapper {
+    flex-direction: column;
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .filter-sidebar {
+    width: 100%;
+  }
+
   .dashboard-header {
     padding: 16px;
   }
@@ -161,16 +220,23 @@
     align-items: flex-start;
   }
 
+  .header-actions {
+    width: 100%;
+  }
+
+  .share-btn,
+  .logout-btn {
+    flex: 1;
+  }
+
   .dashboard-header h1 {
     font-size: 24px;
   }
 
-  .dashboard-main {
-    padding: 12px;
-  }
-
   .controls-section {
     padding: 16px;
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .conferences-grid {
