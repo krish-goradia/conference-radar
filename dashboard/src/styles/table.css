@@ -7,6 +7,7 @@
   box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08);
   margin-top: 24px;
   border: 2px solid #DBEAFE;
+  overflow: visible;
 }
 
 .conferences-table {
@@ -15,7 +16,9 @@
   font-size: 13px;
   table-layout: fixed;
 }
-
+.conferences-table td.info-cell {
+  overflow: visible;
+}
 .conferences-table thead {
   background: linear-gradient(to right, #2563EB, #1E40AF);
   color: #fff;
@@ -223,7 +226,7 @@
   font-size: 12px;
   white-space: normal;
   width: 220px;
-  z-index: 1000;
+  z-index: 999;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.2s ease, visibility 0.2s ease;
