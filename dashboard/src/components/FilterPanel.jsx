@@ -19,7 +19,7 @@ export default function FilterPanel({
           }}
           className="filter-select"
         >
-          <option value="">--Select deadline--</option>
+          <option value="">-- Select deadline --</option>
           <option value="abs_deadline">Abstract Deadline</option>
           <option value="paper_deadline">Paper Deadline</option>
         </select>
