@@ -61,21 +61,37 @@ loginBtn.addEventListener("click",()=>{
     const password = document.getElementById("password").value.trim()
     const confirmPassword = document.getElementById("confirmPassword").value.trim()
     const action = loginBtn.dataset.action || "login"
+    const errorbox = document.getElementById("error")
     document.getElementById("error").textContent = "";
-    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if(!email || !password) {
-        document.getElementById("error").textContent = "Please fill in all fields"
+        errorbox.textContent = "Please fill in all fields"
         return
     }
-    
+    if(!emailRegex.test(email)){
+        errorbox.textContent = "Please enter a valid email address"
+        return
+    }
+    if (password.length < 8) {
+    errorbox.textContent = "Password must be at least 8 characters"
+    return
+    }
+    if (!/[A-Z]/.test(password)) {
+    errorbox.textContent = "Password must contain at least one uppercase letter"
+    return
+    }
+    if (!/[0-9]/.test(password)) {
+    errorbox.textContent = "Password must contain at least one number"
+    return
+    }
     // For signup, validate that passwords match
     if(action === "signup") {
         if(!confirmPassword) {
-            document.getElementById("error").textContent = "Please confirm your password"
+            errorbox.textContent= "Please confirm your password"
             return
         }
         if(password !== confirmPassword) {
-            document.getElementById("error").textContent = "Passwords do not match"
+            errorbox.textContent = "Passwords do not match"
             return
         }
     }
