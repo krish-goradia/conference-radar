@@ -61,8 +61,8 @@ export default function Login() {
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
-          <h1>Conference Radar</h1>
-          <p>Track and manage conference submissions</p>
+          <h1 className="auth-title">Conference Radar</h1>
+          <p className="auth-subtitle">Track and manage conference submissions</p>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
@@ -111,7 +111,7 @@ export default function Login() {
             className="submit-btn"
             disabled={loading}
           >
-            {loading ? 'Loading...' : isSignup ? 'Sign Up' : 'Login'}
+            {loading ? 'Loading...' : 'Sign In'}
           </button>
         </form>
 

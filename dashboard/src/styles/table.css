@@ -2,10 +2,11 @@
 
 .table-container {
   width: 100%;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-top: 20px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08);
+  margin-top: 24px;
+  border: 2px solid #DBEAFE;
 }
 
 .conferences-table {
@@ -15,30 +16,30 @@
 }
 
 .conferences-table thead {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(to right, #2563EB, #1E40AF);
+  color: #fff;
   position: sticky;
   top: 0;
   z-index: 10;
 }
 
 .conferences-table th {
-  padding: 14px 10px;
+  padding: 16px 12px;
   text-align: left;
   font-weight: 700;
   white-space: nowrap;
-  border-bottom: 2px solid #667eea;
+  border-bottom: 2px solid #DBEAFE;
   font-size: 17px;
   letter-spacing: 0.02em;
 }
 
 .conferences-table tbody tr {
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #DBEAFE;
   transition: background-color 0.2s ease;
 }
 
 .conferences-table tbody tr:hover {
-  background-color: #f9f9f9;
+  background-color: #EFF6FF;
 }
 
 .conferences-table tbody tr:last-child {
@@ -48,9 +49,9 @@
 .conferences-table td {
   padding: 14px 10px;
   vertical-align: middle;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 500;
-  color: #23272F;
+  color: #1E3A8A;
 }
 
 /* Title Cell */
@@ -73,7 +74,7 @@
 }
 
 .title-link {
-  color: #667eea;
+  color: #2563EB;
   text-decoration: none;
   cursor: pointer;
   font-weight: 600;
@@ -83,7 +84,7 @@
 }
 
 .title-link:hover {
-  color: #764ba2;
+  color: #1E40AF;
   text-decoration: underline;
 }
 
