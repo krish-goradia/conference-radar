@@ -29,7 +29,7 @@ export default function SavedDashboardsList() {
   };
 
   const handleNavigate = (userId) => {
-    navigate(`/shared/${userId}`);
+    navigate(`/user/${userId}`);
   };
 
   if (loading) {

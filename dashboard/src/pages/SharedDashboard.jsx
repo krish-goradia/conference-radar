@@ -139,7 +139,6 @@ export default function SharedDashboard() {
 
       <div className="dashboard-wrapper">
         <aside className="filter-sidebar">
-          <SavedDashboardsList />
           <HierarchicalFilterPanel
             selectedDomains={selectedDomains}
             selectedKeywords={selectedKeywords}

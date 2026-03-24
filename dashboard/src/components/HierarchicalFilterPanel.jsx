@@ -8,14 +8,13 @@ export default function HierarchicalFilterPanel({
   onSelectedDomainsChange,
   onSelectedKeywordsChange,
   onClearFilters,
-  userId = null, // If set, fetch public research domains for this user
+  userId = null,
 }) {
   const [researchDomains, setResearchDomains] = useState([]);
   const [expandedDomains, setExpandedDomains] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Fetch research domains
   useEffect(() => {
     const fetchDomains = async () => {
       setLoading(true);
@@ -96,15 +95,14 @@ export default function HierarchicalFilterPanel({
     <div className="hierarchical-filter-panel">
       <div className="filter-header">
         <h3>Research Domains</h3>
-        {hasActiveFilters && (
-          <button
-            onClick={onClearFilters}
-            className="clear-filters-btn"
-            title="Clear all filters"
-          >
-            Clear
-          </button>
-        )}
+        <button
+          onClick={onClearFilters}
+          className="clear-filters-btn"
+          title="Clear all filters"
+          disabled={!hasActiveFilters}
+        >
+          Clear
+        </button>
       </div>
 
       <div className="hierarchy-container">
@@ -114,7 +112,6 @@ export default function HierarchicalFilterPanel({
 
           return (
             <div key={item.domain} className="hierarchy-item">
-              {/* Parent Domain */}
               <div className="hierarchy-parent">
                 <button
                   className="expand-btn"
@@ -137,7 +134,6 @@ export default function HierarchicalFilterPanel({
                 </label>
               </div>
 
-              {/* Child Keywords */}
               {isExpanded && item.keywords.length > 0 && (
                 <div className="hierarchy-children">
                   {item.keywords.map((keyword) => (
@@ -160,18 +156,9 @@ export default function HierarchicalFilterPanel({
         })}
       </div>
 
-      {hasActiveFilters && (
-        <div className="filter-summary">
-          <small>
-            {selectedDomains.length > 0 && (
-              <div>{selectedDomains.length} domain(s) selected</div>
-            )}
-            {selectedKeywords.length > 0 && (
-              <div>{selectedKeywords.length} keyword(s) selected</div>
-            )}
-          </small>
-        </div>
-      )}
+      <div className="filter-summary">
+  <small>{selectedDomains.length} domain(s), {selectedKeywords.length} keyword(s) selected</small>
+</div>
     </div>
   );
 }
