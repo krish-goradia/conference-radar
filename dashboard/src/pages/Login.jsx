@@ -16,6 +16,11 @@ export default function Login() {
   const params = new URLSearchParams(location.search);
   const redirect = params.get('redirect');
 
+  const showError = (msg, duration = 2000) => {
+    setError(msg);
+    setTimeout(() => setError(''), duration);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -23,15 +28,45 @@ export default function Login() {
 
     try {
       if (!email || !password) {
-        setError('Please fill in all fields');
+        showError('Please fill in all fields');
+        setLoading(false);
+        return;
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        showError('Please enter a valid email address');
+        setLoading(false);
+        return;
+      }
+
+      // Validate password strength
+      if (password.length < 8) {
+        showError('Password must be at least 8 characters');
+        setLoading(false);
+        return;
+      }
+      if (!/[A-Z]/.test(password)) {
+        showError('Password must contain at least one uppercase letter');
+        setLoading(false);
+        return;
+      }
+      if (!/[0-9]/.test(password)) {
+        showError('Password must contain at least one number');
         setLoading(false);
         return;
       }
 
       let response;
       if (isSignup) {
+        if (!confirmPassword) {
+          showError('Please confirm your password');
+          setLoading(false);
+          return;
+        }
         if (password !== confirmPassword) {
-          setError('Passwords do not match');
+          showError('Passwords do not match');
           setLoading(false);
           return;
         }
@@ -48,10 +83,10 @@ export default function Login() {
           navigate('/dashboard');
         }
       } else {
-        setError(response.data.error || 'Authentication failed');
+        showError(response.data.error || 'Authentication failed');
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'An error occurred');
+      showError(err.response?.data?.error || 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -70,8 +105,9 @@ export default function Login() {
             <label htmlFor="email">Email</label>
             <input
               id="email"
-              type="email"
+              type="text"
               value={email}
+              autoComplete="email"
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your@email.com"
               disabled={loading}
@@ -104,7 +140,10 @@ export default function Login() {
             </div>
           )}
 
-          {error && <div className="error-message">{error}</div>}
+          {error 
+          ? <div className="error-message">{error}</div> 
+          : <div className="error-placeholder" />
+          }
 
           <button
             type="submit"

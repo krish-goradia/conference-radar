@@ -96,27 +96,28 @@
   cursor: not-allowed;
 }
 
+.error-placeholder {
+  height: 42px; 
+}
+
 .error-message {
   background: #FEF2F2;
   color: #B91C1C;
-  padding: 12px 14px;
+  padding: 0px 14px;  
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 17px;   
   border-left: 4px solid #EF4444;
-  animation: slideDown 0.3s ease-out;
+  height: 42px;       
+  box-sizing: border-box;
+  animation: fadeIn 0.3s ease-out;
+  display: flex;         
+  align-items: center;
 }
 
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
-
 .submit-btn {
   padding: 14px 0;
   background: linear-gradient(to right, #2563EB, #1E40AF);
