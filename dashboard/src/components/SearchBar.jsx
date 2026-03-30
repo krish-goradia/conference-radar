@@ -29,7 +29,14 @@ export default function SearchBar({
           type="text"
           placeholder="Search by title, domain, or keywords..."
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+                onChange(e.target.value);
+                if (e.target.value.length >= 2) {
+                  onShowSuggestions(true);
+                } else {
+                  onShowSuggestions(false);
+                }
+          }}
           onFocus={() => value.length >= 2 && onShowSuggestions(true)}
           className="search-input"
         />

@@ -72,6 +72,7 @@ loginBtn.addEventListener("click",()=>{
         errorbox.textContent = "Please enter a valid email address"
         return
     }
+    /*
     if (password.length < 8) {
     errorbox.textContent = "Password must be at least 8 characters"
     return
@@ -84,6 +85,7 @@ loginBtn.addEventListener("click",()=>{
     errorbox.textContent = "Password must contain at least one number"
     return
     }
+    */
     // For signup, validate that passwords match
     if(action === "signup") {
         if(!confirmPassword) {

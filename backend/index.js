@@ -574,9 +574,9 @@ app.get("/my-conferences", auth, async (req, res) => {
 
         // Filter by deadline type (by date only, not exact time)
         if (filterBy === 'abs_deadline' && filterValue) {
-            query += ` AND c.abs_deadline <= CURRENT_DATE + INTERVAL '${filterValue}'`;
+            query += ` AND c.abs_deadline >= CURRENT_DATE AND c.abs_deadline <= CURRENT_DATE + INTERVAL '${filterValue}'`;
         } else if (filterBy === 'paper_deadline' && filterValue) {
-            query += ` AND c.paper_deadline <= CURRENT_DATE + INTERVAL '${filterValue}'`;
+        query += ` AND c.paper_deadline >= CURRENT_DATE AND c.paper_deadline <= CURRENT_DATE + INTERVAL '${filterValue}'`;
         }
 
         query += ` ORDER BY c.abs_deadline ASC NULLS LAST`;
@@ -674,9 +674,9 @@ app.get("/user/:userId/conferences", async (req, res) => {
 
         // Filter by deadline type (by date only, not exact time)
         if (filterBy === 'abs_deadline' && filterValue) {
-            query += ` AND c.abs_deadline <= CURRENT_DATE + INTERVAL '${filterValue}'`;
+            query += ` AND c.abs_deadline >= CURRENT_DATE AND c.abs_deadline <= CURRENT_DATE + INTERVAL '${filterValue}'`;
         } else if (filterBy === 'paper_deadline' && filterValue) {
-            query += ` AND c.paper_deadline <= CURRENT_DATE + INTERVAL '${filterValue}'`;
+            query += ` AND c.paper_deadline >= CURRENT_DATE AND c.paper_deadline <= CURRENT_DATE + INTERVAL '${filterValue}'`;
         }
 
         query += ` ORDER BY c.abs_deadline ASC NULLS LAST`;
