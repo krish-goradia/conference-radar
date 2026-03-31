@@ -50,7 +50,7 @@ export default function ConferenceTable({ conferences }) {
   };
 
   const isArchived = (conf) => {
-    const dates = [conf.abs_deadline, conf.paper_deadline, conf.confer_date].filter(Boolean);
+    const dates = [conf.abs_deadline, conf.paper_deadline, conf.confer_enddate].filter(Boolean);
     if (dates.length === 0) return false;
     return dates.every(d => isDeadlinePassed(d));
   };
@@ -107,12 +107,12 @@ export default function ConferenceTable({ conferences }) {
           <span className="info-icon" title="More information">ℹ️</span>
           <div className="info-tooltip">
             <div className="tooltip-item">
-              <span className="tooltip-label">Conf. Date:</span>
-              <span className="tooltip-value">{conf.confer_date || '—'}</span>
+              <span className="tooltip-label">Conf. Start Date:</span>
+              <span className="tooltip-value">{conf.confer_startdate || '—'}</span>
             </div>
             <div className="tooltip-item">
-              <span className="tooltip-label">Conf. Time:</span>
-              <span className="tooltip-value">{conf.confer_time || '—'}</span>
+              <span className="tooltip-label">Conf. End Date:</span>
+              <span className="tooltip-value">{conf.confer_enddate || '—'}</span>
             </div>
             <div className="tooltip-item">
               <span className="tooltip-label">Conf. Venue:</span>

@@ -7,7 +7,7 @@ export async function runScraperWorker(){
     console.log("fetching all configs")
     const result = await pool.query(`
         SELECT sc.*, c.conf_id, c.abs_deadline, c.abs_time, c.paper_deadline,
-               c.paper_time, c.confer_date, c.confer_time, c.confer_venue
+               c.paper_time, c.confer_startdate,c.confer_enddate, c.confer_venue
         FROM scrape_configs sc
         JOIN conferences c
         ON sc.id = c.config_id
@@ -30,7 +30,7 @@ export async function runScraperWorker(){
             const raw = await extractFields(page, config)
             const normalized = handleFields(raw)
 
-            const fields = ["abs_deadline","abs_time","paper_deadline","paper_time","confer_date","confer_time","confer_venue"]
+            const fields = ["abs_deadline","abs_time","paper_deadline","paper_time","confer_date","confer_startdate","confer_enddate","confer_venue"]
 
             // Only consider fields that were actually scraped (non-null)
             // AND differ from what's already stored

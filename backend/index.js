@@ -53,7 +53,8 @@ function convertConferenceForDisplay(conference) {
     // Only convert deadline date columns (stored in UTC)
     abs_deadline: conference.abs_deadline ? formatDateAsString(convertUTCToServerTimezone(conference.abs_deadline)) : null,
     paper_deadline: conference.paper_deadline ? formatDateAsString(convertUTCToServerTimezone(conference.paper_deadline)) : null,
-    confer_date: conference.confer_date ? formatDateAsString(convertUTCToServerTimezone(conference.confer_date)) : null
+    confer_startdate: conference.confer_startdate ? formatDateAsString(convertUTCToServerTimezone(conference.confer_startdate)) : null,
+    confer_enddate: conference.confer_enddate ? formatDateAsString(convertUTCToServerTimezone(conference.confer_enddate)) : null
     // All other fields returned as-is from database
   };
 }
@@ -123,7 +124,6 @@ app.get("/confgetbyid",auth,async(req,res)=>{
                 sc.absdeadline_xpath,
                 sc.papdeadline_xpath,
                 sc.confdate_xpath,
-                sc.conftime_xpath,
                 sc.confvenue_xpath,
                 sc.conf_url,
                 sc.conf_ext_id,
@@ -151,7 +151,6 @@ app.get("/confgetbyid",auth,async(req,res)=>{
                 paper_deadline: {xpath: row.papdeadline_xpath},
                 paper_time: {value: row.paper_time},
                 conf_date: {xpath:row.confdate_xpath},
-                conf_time: {xpath: row.conftime_xpath},
                 conf_venue:{xpath: row.confvenue_xpath}
             },
             meta: {
@@ -318,19 +317,17 @@ app.post("/submit-conference",auth,async(req,res)=>{
             absdeadline_xpath,
             papdeadline_xpath,
             confdate_xpath,
-            conftime_xpath,
             confvenue_xpath,
             abstime_xpath,
             papertime_xpath
         )
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
         ON CONFLICT (conf_ext_id)
         DO UPDATE SET
             conf_url = COALESCE(EXCLUDED.conf_url, scrape_configs.conf_url),
             absdeadline_xpath = COALESCE(EXCLUDED.absdeadline_xpath, scrape_configs.absdeadline_xpath),
             papdeadline_xpath = COALESCE(EXCLUDED.papdeadline_xpath, scrape_configs.papdeadline_xpath),
             confdate_xpath = COALESCE(EXCLUDED.confdate_xpath, scrape_configs.confdate_xpath),
-            conftime_xpath = COALESCE(EXCLUDED.conftime_xpath, scrape_configs.conftime_xpath),
             confvenue_xpath = COALESCE(EXCLUDED.confvenue_xpath, scrape_configs.confvenue_xpath),
             abstime_xpath = COALESCE(EXCLUDED.abstime_xpath, scrape_configs.abstime_xpath),
             papertime_xpath = COALESCE(EXCLUDED.papertime_xpath,scrape_configs.papertime_xpath)
@@ -341,7 +338,6 @@ app.post("/submit-conference",auth,async(req,res)=>{
             fields.abs_deadline?.xpath || null,
             fields.paper_deadline?.xpath || null,
             fields.conf_date?.xpath || null,
-            fields.confer_time?.xpath || null,
             fields.confer_venue?.xpath || null,
             fields.abs_time?.xpath|| null,
             fields.paper_time?.xpath || null
@@ -510,8 +506,8 @@ app.get("/my-conferences", auth, async (req, res) => {
                 c.paper_deadline,
                 c.paper_time,
                 c.paper_timezone,
-                c.confer_date,
-                c.confer_time,
+                c.confer_startdate,
+                c.confer_enddate,
                 c.confer_venue
             FROM conferences c
             LEFT JOIN scrape_configs sc ON c.config_id = sc.id
@@ -645,8 +641,8 @@ app.get("/user/:userId/conferences", async (req, res) => {
                 c.paper_deadline,
                 c.paper_time,
                 c.paper_timezone,
-                c.confer_date,
-                c.confer_time,
+                c.confer_startdate,
+                c.confer_enddate,
                 c.confer_venue
             FROM conferences c
             LEFT JOIN scrape_configs sc ON c.config_id = sc.id

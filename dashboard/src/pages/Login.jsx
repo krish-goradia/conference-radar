@@ -42,7 +42,7 @@ export default function Login() {
       }
 
       // Validate password strength
-      /*
+      
       if (password.length < 8) {
         showError('Password must be at least 8 characters');
         setLoading(false);
@@ -58,7 +58,7 @@ export default function Login() {
         setLoading(false);
         return;
       }
-      */
+      
       let response;
       if (isSignup) {
         if (!confirmPassword) {

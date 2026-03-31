@@ -13,6 +13,37 @@ export function extractDate(text){
     }
     return null;
 }
+// this is used by the conference date
+export function extractDateRange(text) {
+    if (!text || typeof text !== "string") {
+        return { start: null, end: null };
+    }
+
+    try {
+        const results = chrono.parse(text);
+
+        if (!results || results.length === 0) {
+            return { start: null, end: null };
+        }
+
+        const result = results[0];
+
+        const startDate = result.start?.date();
+        const endDate = result.end?.date() || startDate;
+
+        const format = (d) => d ? d.toISOString().split("T")[0] : null;
+
+        return {
+            startdate: format(startDate),
+            enddate: format(endDate)
+        };
+
+    } catch (err) {
+        console.debug(`date range parse error for text='${text}':`, err.message);
+        return { start: null, end: null };
+    }
+}
+
 
 export function extractTime(text){
     if(!text || typeof text !== 'string') return null

@@ -35,11 +35,11 @@ export default function FilterPanel({
           disabled={!filterBy}
         >
           <option value="">-- Select range --</option>
-          <option value="7 days">Next 7 days</option>
           <option value="14 days">Next 14 days</option>
           <option value="30 days">Next 30 days</option>
           <option value="60 days">Next 60 days</option>
           <option value="90 days">Next 90 days</option>
+          <option value="180 days">Next 180 days</option>
         </select>
       </div>
 
