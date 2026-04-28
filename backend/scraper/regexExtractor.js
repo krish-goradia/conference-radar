@@ -89,22 +89,32 @@ export function extractTime(text){
     }
 }
 
-export function extractVenue(text){
-    if(!text || typeof text !== 'string') return null
-    try{
-        if(/online|virtual|zoom|teams/i.test(text)){
-            return "Online";
+
+
+export function extractVenue(text) {
+    if (!text || typeof text !== 'string') return null;
+    try {
+        // strip all chrono-detected date spans first
+        const results = chrono.parse(text);
+        let cleaned = text;
+        // iterate in reverse so indices don't shift as we splice
+        for (let i = results.length - 1; i >= 0; i--) {
+            const { index, text: match } = results[i];
+            cleaned = cleaned.slice(0, index) + cleaned.slice(index + match.length);
         }
-        text = text
-            .replace(/\s+/g," ")
-            .replace(/(venue|location|place|address|held at)\s*[:\-–]\s*/i,"")
-            .replace(/[.,;]$/,"")
-            .trim()
-        if(text.length > 200) return null;
-        return text || null
-    }
-    catch(err){
-        console.debug(`venue parse error for text='${text}':`, err.message)
-        return null
+
+        cleaned = cleaned
+                .replace(/\s+/g, " ")
+                .replace(/(venue|location|place|address|held at)\s*[:\-–]\s*/i, "")
+                .replace(/[\s,;:\-–]+$/, "")   // trailing separators
+                .replace(/^[\s,;:\-–]+/, "")   // leading separators (in case date was at start)
+                .trim();
+
+        if (/online|virtual|zoom|teams/i.test(cleaned)) return "Online";
+        if (!cleaned || cleaned.length > 200) return null;
+        return cleaned;
+    } catch (err) {
+        console.debug(`venue parse error for text='${text}':`, err.message);
+        return null;
     }
 }

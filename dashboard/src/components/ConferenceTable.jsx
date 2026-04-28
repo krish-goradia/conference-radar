@@ -32,8 +32,9 @@ export default function ConferenceTable({ conferences }) {
 
   const formatTimeWithTimezone = (time, timezone) => {
     if (!time) return <span className="null-value">—</span>;
-    const tz = timezone || '';
-    return `${time}${tz ? ` ${tz}` : ''}`;
+    const tz = (timezone && timezone.trim()) || 'AOE'; // since default value is AOE i kept it that
+    const shortTime = time.slice(0,5);
+    return `${shortTime}${tz ? ` ${tz}` : ''}`;
   };
 
   const isDeadlinePassed = (dateString) => {

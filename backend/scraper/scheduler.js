@@ -1,7 +1,7 @@
 import {runScraperWorker} from "./scraperWorker.js";
 import {closeBrowser} from "./browser.js";
 
-const HOURS = 0.16
+const HOURS = parseFloat(process.env.SCRAPER_HOURS)
 const DELAY = HOURS*60*60*1000
 
 function sleep(ms){
