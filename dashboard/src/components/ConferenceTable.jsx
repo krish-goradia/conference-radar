@@ -132,11 +132,11 @@ export default function ConferenceTable({ conferences }) {
             <tr>
               <th style={{ width: '14%' }}>Title</th>
               <th style={{ width: '14%' }}>Keywords</th>
-              <th style={{ width: '14%' }}>Abstract Deadline</th>
-              <th style={{ width: '14%' }}>Abstract Time</th>
+              <th style={{ width: '16%' }}>Abstract Deadline</th>
+              <th style={{ width: '13%' }}>Abstract Time</th>
               <th style={{ width: '14%' }}>Paper Deadline</th>
               <th style={{ width: '14%' }}>Paper Time</th>
-              <th style={{ width: '14%' }}>Conference Info</th>
+              <th style={{ width: '15%' }}>Conference Info</th>
             </tr>
         </thead>
         <tbody>
