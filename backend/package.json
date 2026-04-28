@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
+    "scrape": "node index.js --scraper-only",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

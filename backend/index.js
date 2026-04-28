@@ -6,6 +6,7 @@ import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import cors from "cors"
 import { startScheduler } from "./scraper/scheduler.js"
+import { requestScrapeRun } from "./scraper/runController.js"
 import { auth } from "./auth.js"
 import pool from "./db.js"
 
@@ -331,7 +332,7 @@ app.post("/submit-conference",auth,async(req,res)=>{
             confvenue_xpath = COALESCE(EXCLUDED.confvenue_xpath, scrape_configs.confvenue_xpath),
             abstime_xpath = COALESCE(EXCLUDED.abstime_xpath, scrape_configs.abstime_xpath),
             papertime_xpath = COALESCE(EXCLUDED.papertime_xpath,scrape_configs.papertime_xpath)
-        RETURNING id`,
+        RETURNING id, (xmax = 0) AS inserted`,
         [
             meta.conf_URL,
             conf_ext_id,
@@ -339,11 +340,12 @@ app.post("/submit-conference",auth,async(req,res)=>{
             fields.paper_deadline?.xpath || null,
             fields.conf_date?.xpath || null,
             fields.confer_venue?.xpath || null,
-            fields.abs_time?.xpath|| null,
+            fields.abs_time?.xpath || null,
             fields.paper_time?.xpath || null
         ]
         );
         const config_id = scrape_result.rows[0].id;
+        const isFreshRecord = scrape_result.rows[0].inserted;
         const conf_result = await client.query(
             `INSERT INTO conferences (
                 config_id,
@@ -377,6 +379,12 @@ app.post("/submit-conference",auth,async(req,res)=>{
             );
 
         await client.query("COMMIT");
+
+        if (isFreshRecord) {
+            void requestScrapeRun("fresh-record").catch(err => {
+                console.error("fresh record scrape trigger failed:", err);
+            });
+        }
 
         res.status(201).json({
             success: true,

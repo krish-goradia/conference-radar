@@ -5,10 +5,13 @@
 //     return state;
 // }
 
+//const BACKEND_ORIGIN = "http://conf-radar.iitgn.ac.in:8080";
+const BACKEND_ORIGIN = "http://localhost:5000";
+
 async function getConferenceStatefromDB(identifier){
     try{
         const {token} = await chrome.storage.local.get("token");
-        const res = await fetch(`http://localhost:5000/confgetbyid?conf_ext_id=${identifier}`, {
+        const res = await fetch(`${BACKEND_ORIGIN}/confgetbyid?conf_ext_id=${identifier}`, {
                 headers: { "Authorization": `Bearer ${token}` }
         });
         if(res.status ===401){
@@ -60,7 +63,7 @@ chrome.runtime.onMessage.addListener(async(msg)=>{
     if(msg.type!=="AUTH_REQUEST") return;
     const endpoint = msg.action === "login" ? "login" :"signup"
     try{
-        const res = await fetch(`http://localhost:5000/${endpoint}`, {
+        const res = await fetch(`${BACKEND_ORIGIN}/${endpoint}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email: msg.email, password: msg.password })
@@ -121,7 +124,7 @@ chrome.runtime.onMessage.addListener(async (msg) => {
     }
     try{
         const {token} = await chrome.storage.local.get("token");
-        const res = await fetch("http://localhost:5000/submit-conference",{
+        const res = await fetch(`${BACKEND_ORIGIN}/submit-conference`,{
             method : "POST",
             headers: {
                 "Content-Type":"application/json",
@@ -165,7 +168,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 async function handleFetchKeywords(query, sendResponse) {
     try {
         const { token } = await chrome.storage.local.get("token");
-        const res = await fetch(`http://localhost:5000/autocomplete/keywords?q=${encodeURIComponent(query)}`,{
+        const res = await fetch(`${BACKEND_ORIGIN}/autocomplete/keywords?q=${encodeURIComponent(query)}`,{
             headers: {
                 "Authorization": `Bearer ${token}`
             }

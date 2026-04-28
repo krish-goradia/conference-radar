@@ -8,7 +8,7 @@ export default function ConferenceTable({ conferences }) {
   useEffect(() => {
     const fetchServerTimezone = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/server-timezone`);
+        const response = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/server-timezone`);
         const data = await response.json();
         if (data.success) {
           setServerTimezoneOffset(data.offset);
