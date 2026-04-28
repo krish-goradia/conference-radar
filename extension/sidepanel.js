@@ -73,21 +73,22 @@ loginBtn.addEventListener("click",()=>{
         return
     }
 
-    if (password.length < 8) {
-    errorbox.textContent = "Password must be at least 8 characters"
-    return
-    }
-    if (!/[A-Z]/.test(password)) {
-    errorbox.textContent = "Password must contain at least one uppercase letter"
-    return
-    }
-    if (!/[0-9]/.test(password)) {
-    errorbox.textContent = "Password must contain at least one number"
-    return
-    }
-    
-    // For signup, validate that passwords match
+    // For signup, validate that passwords match first
     if(action === "signup") {
+        
+        // Validate password strength for signups only
+        if (password.length < 8) {
+            errorbox.textContent = "Password must be at least 8 characters"
+            return
+        }
+        if (!/[A-Z]/.test(password)) {
+            errorbox.textContent = "Password must contain at least one uppercase letter"
+            return
+        }
+        if (!/[0-9]/.test(password)) {
+            errorbox.textContent = "Password must contain at least one number"
+            return
+        }
         if(!confirmPassword) {
             errorbox.textContent= "Please confirm your password"
             return

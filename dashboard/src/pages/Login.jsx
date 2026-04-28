@@ -41,24 +41,6 @@ export default function Login() {
         return;
       }
 
-      // Validate password strength
-      
-      if (password.length < 8) {
-        showError('Password must be at least 8 characters');
-        setLoading(false);
-        return;
-      }
-      if (!/[A-Z]/.test(password)) {
-        showError('Password must contain at least one uppercase letter');
-        setLoading(false);
-        return;
-      }
-      if (!/[0-9]/.test(password)) {
-        showError('Password must contain at least one number');
-        setLoading(false);
-        return;
-      }
-      
       let response;
       if (isSignup) {
         if (!confirmPassword) {
@@ -71,6 +53,24 @@ export default function Login() {
           setLoading(false);
           return;
         }
+
+        // Validate password strength for signups only
+        if (password.length < 8) {
+          showError('Password must be at least 8 characters');
+          setLoading(false);
+          return;
+        }
+        if (!/[A-Z]/.test(password)) {
+          showError('Password must contain at least one uppercase letter');
+          setLoading(false);
+          return;
+        }
+        if (!/[0-9]/.test(password)) {
+          showError('Password must contain at least one number');
+          setLoading(false);
+          return;
+        }
+
         response = await authAPI.signup(email, password);
       } else {
         response = await authAPI.login(email, password);
