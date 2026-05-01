@@ -30,6 +30,10 @@ export async function runScraperWorker(){
             const raw = await extractFields(page, config)
             const normalized = handleFields(raw)
 
+            console.log(`📊 extracted: abs_deadline="${raw.abs_deadline}", paper_deadline="${raw.paper_deadline}", confer_date="${raw.confer_date}", venue="${raw.confer_venue}"`)
+            console.log(`📊 normalized: abs_deadline="${normalized.abs_deadline}", paper_deadline="${normalized.paper_deadline}", confer_startdate="${normalized.confer_startdate}", confer_enddate="${normalized.confer_enddate}"`)
+            console.log(`🔗 xpaths set: abs=${config.absdeadline_xpath ? '✓' : '✗'}, paper=${config.papdeadline_xpath ? '✓' : '✗'}, confdate=${config.confdate_xpath ? '✓' : '✗'}, venue=${config.confvenue_xpath ? '✓' : '✗'}`)
+
             const fields = ["abs_deadline","abs_time","paper_deadline","paper_time","confer_date","confer_startdate","confer_enddate","confer_venue"]
 
             // Only consider fields that were actually scraped (non-null)
@@ -41,7 +45,7 @@ export async function runScraperWorker(){
             )
 
             if(changedFields.length === 0){
-                console.log(`no change (or no new data) for ${config.conf_url}`)
+                console.log(`⚠️ no change (or no new data) for ${config.conf_url}`)
                 continue
             }
 
