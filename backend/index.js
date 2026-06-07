@@ -405,11 +405,13 @@ app.post("/signup",async(req,res)=>{
     const hash = await bcrypt.hash(password,10)
     try{
         const user = await pool.query(
-        "INSERT INTO users(email,password_hash) VALUES($1,$2) RETURNING id",
+        "INSERT INTO users(email,password_hash) VALUES($1,$2) RETURNING id,public_id",
         [email, hash]
         )
         const token = jwt.sign(
-            {userId: user.rows[0].id},
+            {   userId: user.rows[0].id,
+                publicId: user.rows[0].public_id
+            },
             process.env.JWT_SECRET_KEY,
             {expiresIn:"7d"}
         )
@@ -441,7 +443,9 @@ app.post("/login",async(req,res)=>{
             return res.status(401).json({success:false, error:"Invalid credentials"})
         }
         const token = jwt.sign(
-            {userId: user.rows[0].id},
+            {   userId: user.rows[0].id,
+                publicId: user.rows[0].public_id
+            },
             process.env.JWT_SECRET_KEY,
             {expiresIn:"7d"}
         )
@@ -599,7 +603,7 @@ app.get("/user/:userId/info", async (req, res) => {
     try {
         const { userId } = req.params;
         const result = await pool.query(
-            "SELECT id, email, created_at FROM users WHERE id = $1",
+            "SELECT id,public_id, email, created_at FROM users WHERE public_id = $1",
             [userId]
         );
         
@@ -629,7 +633,7 @@ app.get("/user/:userId/conferences", async (req, res) => {
         const { search, filterBy, filterValue } = req.query;
 
         // Verify user exists first
-        const userCheck = await pool.query("SELECT id FROM users WHERE id = $1", [userId]);
+        const userCheck = await pool.query("SELECT id FROM users WHERE public_id = $1", [userId]);
         if (userCheck.rows.length === 0) {
             return res.status(404).json({ success: false, error: "User not found" });
         }
@@ -656,7 +660,8 @@ app.get("/user/:userId/conferences", async (req, res) => {
             LEFT JOIN scrape_configs sc ON c.config_id = sc.id
             WHERE c.user_id = $1
         `;
-        let params = [userId];
+        const internalUserId = userCheck.rows[0].id;
+        let params = [internalUserId];
         let paramIndex = 2;
 
         // Search by keyword (title, domain, and keywords)
@@ -776,17 +781,17 @@ app.get("/user/:userId/research-domains", async (req, res) => {
     try {
         const { userId } = req.params;
         // Check user exists
-        const userCheck = await pool.query("SELECT id FROM users WHERE id = $1", [userId]);
+        const userCheck = await pool.query("SELECT id FROM users WHERE public_id = $1", [userId]);
         if (userCheck.rows.length === 0) {
             return res.status(404).json({ success: false, error: "User not found" });
         }
-
+        const internalUserId = userCheck.rows[0].id;
         const result = await pool.query(`
             SELECT DISTINCT research_domain
             FROM conferences
             WHERE user_id = $1 AND research_domain IS NOT NULL
             ORDER BY research_domain
-        `, [userId]);
+        `, [internalUserId]);
 
         const domainsList = result.rows.map(r => r.research_domain);
         // For each domain, get keywords
@@ -800,7 +805,7 @@ app.get("/user/:userId/research-domains", async (req, res) => {
                         WHERE user_id = $1 AND research_domain = $2 AND keywords IS NOT NULL
                     ) t
                     ORDER BY kw
-                `, [userId, domain]);
+                `, [internalUserId, domain]);
                 return {
                     domain,
                     keywords: keywordResult.rows.map(r => r.kw)

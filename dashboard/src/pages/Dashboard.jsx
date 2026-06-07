@@ -23,6 +23,7 @@ export default function Dashboard() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [userId, setUserId] = useState(null);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [publicId, setPublicId] = useState(null);
 
   // Check authentication
   useEffect(() => {
@@ -44,6 +45,7 @@ export default function Dashboard() {
       );
       const decoded = JSON.parse(jsonPayload);
       setUserId(decoded.userId);
+      setPublicId(decoded.publicId);
     } catch (err) {
       console.error('Failed to decode token:', err);
     }
@@ -139,7 +141,7 @@ export default function Dashboard() {
       </header>
 
       <ShareModal 
-        userId={userId} 
+        userId={publicId} 
         isOpen={showShareModal} 
         onClose={() => setShowShareModal(false)} 
       />
