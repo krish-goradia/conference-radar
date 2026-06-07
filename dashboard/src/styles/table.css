@@ -1,0 +1,341 @@
+/* Conference Table Styles */
+
+.table-container {
+  width: 100%;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08);
+  margin-top: 24px;
+  border: 2px solid #DBEAFE;
+  overflow: visible;
+}
+
+.conferences-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  table-layout: fixed;
+}
+.conferences-table td.info-cell {
+  overflow: visible;
+}
+.conferences-table thead {
+  background: linear-gradient(to right, #2563EB, #1E40AF);
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.conferences-table th {
+  padding: 16px 12px;
+  text-align: left;
+  font-weight: 700;
+  white-space: nowrap;
+  border-bottom: 2px solid #DBEAFE;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}
+
+.conferences-table tbody tr {
+  border-bottom: 1px solid #DBEAFE;
+  transition: background-color 0.2s ease;
+}
+
+.conferences-table tbody tr:hover {
+  background-color: #EFF6FF;
+}
+
+.conferences-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.conferences-table td {
+  padding: 14px 10px;
+  vertical-align: middle;
+  font-size: 16px;
+  font-weight: 500;
+  color: #1E3A8A;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Title Cell */
+.title-cell {
+  width: 32%;
+  font-weight: 500;
+  overflow: visible;
+}
+
+.title-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title-info strong {
+  color: #333;
+  word-break: break-word;
+  font-size: 13px;
+}
+
+.title-link {
+  color: #2563EB;
+  text-decoration: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: color 0.2s ease;
+  display: block;
+  word-break: break-word;
+}
+
+.title-link:hover {
+  color: #1E40AF;
+  text-decoration: underline;
+}
+
+.title-link.disabled {
+  color: #999;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.title-link.disabled:hover {
+  color: #999;
+  text-decoration: none;
+}
+
+.tooltip-item {
+  display: flex;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.tooltip-item:not(:last-child) {
+  border-bottom: 1px solid #DBEAFE;
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+}
+
+.tooltip-label {
+  font-weight: 600;
+  color: #4caf50;
+}
+
+.tooltip-value {
+  color: #fff;
+}
+
+.title-info .subtitle {
+  color: #666;
+  font-weight: normal;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* Keywords Cell */
+.keywords-cell {
+  min-width: 140px;
+  max-width: 200px;
+  vertical-align: middle;
+}
+
+.keywords-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.keyword-tag {
+  background-color: #e2e5e9;
+  color: #4a5568;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.keyword-tag--more {
+  background-color: #cdd0d4;
+  color: #2d3748;
+  cursor: default;
+}
+
+/* Deadline Cell */
+.deadline-cell {
+  text-align: left;
+  font-weight: 500;
+  width: 12%;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 12px;
+}
+
+.deadline-cell.deadline-passed {
+  background-color: #ffebee;
+  color: #c62828;
+  font-weight: 600;
+}
+
+/* Time + Timezone Cell */
+.time-tz-cell {
+  text-align: left;
+  font-weight: 500;
+  width: 12%;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 12px;
+}
+
+/* Info Cell */
+.info-cell {
+  text-align: center;
+  width: 12%;
+  position: relative;
+  overflow: visible;
+  z-index: 50;
+}
+
+.info-tooltip-wrapper {
+  position: relative;
+  display: inline-block;
+  z-index: 1000;
+}
+
+.info-icon {
+  cursor: help;
+  font-size: 18px;
+  display: inline-block;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.info-icon:hover {
+  opacity: 1;
+}
+
+.info-tooltip {
+  position: absolute;
+  bottom: 125%;
+  right: -50px;
+  background: #ffffff;
+  color: #1E3A8A;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  white-space: normal;
+  width: 220px;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.15);
+  border:1px solid #DBEAFE;
+}
+
+.info-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 50px;
+  border: 5px solid transparent;
+  border-top-color: #ffffff;
+}
+.tooltip-label {
+  font-weight: 600;
+  color: #2563EB;
+}
+.tooltip-value {
+  color: #1E3A8A;
+}
+.info-tooltip-wrapper:hover .info-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.link-cell .external-link {
+  display: inline-block;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  text-decoration: none;
+}
+
+.link-cell .external-link:hover {
+  transform: scale(1.2);
+}
+
+/* Null Values */
+.null-value {
+  color: #999;
+  font-style: italic;
+  opacity: 0.7;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .conferences-table {
+    font-size: 12px;
+  }
+
+  .conferences-table th,
+  .conferences-table td {
+    padding: 8px 6px;
+  }
+
+  .title-cell {
+    max-width: 150px;
+  }
+
+  .keywords-list {
+    gap: 2px;
+  }
+
+  .keyword-tag {
+    font-size: 10px;
+    padding: 2px 4px;
+  }
+}
+
+@media (max-width: 768px) {
+  .table-container {
+    border-radius: 4px;
+  }
+
+  .conferences-table {
+    font-size: 11px;
+  }
+
+  .conferences-table th,
+  .conferences-table td {
+    padding: 6px 4px;
+  }
+
+  .title-cell {
+    max-width: 100px;
+  }
+
+  .title-info strong {
+    font-size: 11px;
+  }
+
+  .title-info .subtitle {
+    display: none;
+  }
+}
+.archived-toggle-row {
+  background: #F1F5F9;
+  cursor: pointer;
+  user-select: none;
+}
+
+.archived-toggle-row:hover {
+  background: #E2E8F0;
+}
+
+.archived-toggle-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748B;
+  letter-spacing: 0.3px;
+}

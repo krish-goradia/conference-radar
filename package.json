@@ -1,0 +1,15 @@
+{
+  "name": "conference-radar",
+  "version": "1.0.0",
+  "description": "Conference Radar - Capture, maintain, and share conference submission information",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run backend\" \"npm run dashboard\"",
+    "backend": "cd backend && npm start",
+    "dashboard": "cd dashboard && npm run dev",
+    "install-all": "npm install && cd backend && npm install && cd ../dashboard && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

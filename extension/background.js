@@ -5,12 +5,20 @@
 //     return state;
 // }
 
+const BACKEND_ORIGIN = "http://conf-radar.iitgn.ac.in:8080";
+//const BACKEND_ORIGIN = "http://localhost:5000";
+
 async function getConferenceStatefromDB(identifier){
     try{
-        const response = await fetch(
-            `http://localhost:5000/confgetbyid?conf_ext_id=${identifier}`
-        );
-        const data = await response.json();
+        const {token} = await chrome.storage.local.get("token");
+        const res = await fetch(`${BACKEND_ORIGIN}/confgetbyid?conf_ext_id=${identifier}`, {
+                headers: { "Authorization": `Bearer ${token}` }
+        });
+        if(res.status ===401){
+            await handleAuthExpiry();
+            return {success:false};
+        }
+        const data = await res.json();
         return data;
     }
     catch(err){
@@ -50,6 +58,28 @@ chrome.runtime.onMessage.addListener(async (msg,sender,send_resp)=>{
     })
 
 })
+
+chrome.runtime.onMessage.addListener(async(msg)=>{
+    if(msg.type!=="AUTH_REQUEST") return;
+    const endpoint = msg.action === "login" ? "login" :"signup"
+    try{
+        const res = await fetch(`${BACKEND_ORIGIN}/${endpoint}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: msg.email, password: msg.password })
+        });
+        const data = await res.json();
+        if(!data.success) throw new Error (data.error || `${msg.action} failed`);
+        await chrome.storage.local.set({token:data.token});
+        chrome.runtime.sendMessage({type:"AUTH_RESULT",success:true});
+    }
+    catch(err){
+        chrome.runtime.sendMessage({type:"AUTH_RESULT",success:false,error:err.message});
+    }
+})
+
+
+
 
 chrome.runtime.onMessage.addListener(async (msg,sender)=>{
     if(msg.type!=="FIELD_SELECTED") return;
@@ -93,10 +123,12 @@ chrome.runtime.onMessage.addListener(async (msg) => {
         return;
     }
     try{
-        const res = await fetch("http://localhost:5000/submit-conference",{
+        const {token} = await chrome.storage.local.get("token");
+        const res = await fetch(`${BACKEND_ORIGIN}/submit-conference`,{
             method : "POST",
             headers: {
-                "Content-Type":"application/json"
+                "Content-Type":"application/json",
+                "Authorization": `Bearer ${token}`
             },
             body: JSON.stringify({
                 conf_ext_id: confer_id,
@@ -105,7 +137,10 @@ chrome.runtime.onMessage.addListener(async (msg) => {
             })
 
         });
-
+        if(res.status ===401){
+            await handleAuthExpiry();
+            return {success:false};
+        }
         const result = await res.json();
         if(result.success){
             console.log("saved to db", confer_id);
@@ -122,3 +157,38 @@ chrome.runtime.onMessage.addListener(async (msg) => {
         chrome.runtime.sendMessage({ type: "SUBMIT_RESULT", success: false });
     }
 });
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === "FETCH_KEYWORDS") {
+        handleFetchKeywords(message.query, sendResponse);
+        return true;
+    }
+});
+
+async function handleFetchKeywords(query, sendResponse) {
+    try {
+        const { token } = await chrome.storage.local.get("token");
+        const res = await fetch(`${BACKEND_ORIGIN}/autocomplete/keywords?q=${encodeURIComponent(query)}`,{
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+            }
+        );
+        if(res.status ===401){
+            await handleAuthExpiry();
+            return {success:false};
+        }
+        const data = await res.json();
+        sendResponse(data);
+    } catch (err) {
+        sendResponse([]);
+    }
+}
+
+async function handleAuthExpiry(){
+    await chrome.storage.local.remove("token")
+    const allItems = await chrome.storage.local.get(null);
+    const keystoRemove = Object.keys(allItems).filter(k=>k!=="token");
+    if(keystoRemove.length>0) await chrome.storage.local.remove(keystoRemove);
+    chrome.runtime.sendMessage({type:"AUTH_EXPIRED"});
+}

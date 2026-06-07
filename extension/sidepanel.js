@@ -6,6 +6,12 @@ const abstz = document.getElementById("abs_timezone");
 const papertz = document.getElementById("paper_timezone");
 const conferFields = [...document.querySelectorAll("#btn_container .mybutton")].map(btn => btn.id)
 const metaFields = [...metafields.querySelectorAll("input")].map(input => input.id)
+const authView = document.getElementById("authView")
+const mainView = document.getElementById("mainView")
+const loginBtn = document.getElementById("loginBtn")
+const logoutBtn = document.getElementById("logoutBtn")
+const authTabs = document.querySelectorAll(".auth-tab")
+const loginForm = document.getElementById("loginForm")
 let currenttabid = null;
 
 
@@ -14,6 +20,149 @@ const FIELD_LABELS = {
     "paper_deadline": "Paper Deadline",
     "abs_deadline": "Abstract Deadline"
 }
+authTabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+        const action = tab.dataset.tab;
+        authTabs.forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        const confirmPasswordGroup = document.getElementById("confirmPasswordGroup");
+        if(action === "login") {
+            loginBtn.textContent = "Sign In";
+            confirmPasswordGroup.style.display = "none";
+        } else {
+            loginBtn.textContent = "Create Account";
+            confirmPasswordGroup.style.display = "flex";
+        }
+        loginBtn.dataset.action = action;
+    });
+});
+
+async function initAuth(){
+    const {token} = await chrome.storage.local.get("token")
+    if(token){
+        showMainView();
+    }
+    else{
+        showAuthView();
+    }
+}
+function showAuthView(){
+    authView.style.display = "flex"
+    mainView.style.display = "none"
+}
+function showMainView(){
+    authView.style.display = "none"
+    mainView.style.display = "block"
+    setTimeout(panelopen,100);
+}
+
+loginBtn.addEventListener("click",()=>{
+    const email = document.getElementById("email").value.trim()
+    const password = document.getElementById("password").value.trim()
+    const confirmPassword = document.getElementById("confirmPassword").value.trim()
+    const action = loginBtn.dataset.action || "login"
+    const errorbox = document.getElementById("error")
+    document.getElementById("error").textContent = "";
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if(!email || !password) {
+        errorbox.textContent = "Please fill in all fields"
+        return
+    }
+    if(!emailRegex.test(email)){
+        errorbox.textContent = "Please enter a valid email address"
+        return
+    }
+
+    // For signup, validate that passwords match first
+    if(action === "signup") {
+        
+        // Validate password strength for signups only
+        if (password.length < 8) {
+            errorbox.textContent = "Password must be at least 8 characters"
+            return
+        }
+        if (!/[A-Z]/.test(password)) {
+            errorbox.textContent = "Password must contain at least one uppercase letter"
+            return
+        }
+        if (!/[0-9]/.test(password)) {
+            errorbox.textContent = "Password must contain at least one number"
+            return
+        }
+        if(!confirmPassword) {
+            errorbox.textContent= "Please confirm your password"
+            return
+        }
+        if(password !== confirmPassword) {
+            errorbox.textContent = "Passwords do not match"
+            return
+        }
+    }
+    
+    chrome.runtime.sendMessage({type:"AUTH_REQUEST", action: action, email, password})
+})
+
+// Allow Enter key to submit
+document.getElementById("email")?.addEventListener("keypress", (e) => {
+    if(e.key === "Enter") loginBtn.click()
+})
+
+document.getElementById("password")?.addEventListener("keypress", (e) => {
+    if(e.key === "Enter") loginBtn.click()
+})
+
+document.getElementById("confirmPassword")?.addEventListener("keypress", (e) => {
+    if(e.key === "Enter") loginBtn.click()
+})
+
+chrome.runtime.onMessage.addListener((msg)=>{
+    if(msg.type!== "AUTH_RESULT") return;
+    if(msg.success){
+        showMainView();
+    }
+    else{
+        document.getElementById("error").textContent = msg.error;
+    }
+})
+
+logoutBtn.addEventListener("click", async () => {
+    const modal = document.getElementById("logoutModal");
+    modal.classList.add("show");
+});
+
+document.getElementById("cancelLogout").addEventListener("click", () => {
+    const modal = document.getElementById("logoutModal");
+    modal.classList.remove("show");
+});
+
+document.getElementById("confirmLogout").addEventListener("click", async () => {
+    // Clear token from storage
+    await chrome.storage.local.remove("token");
+    
+    // Clear all conference drafts
+    const allItems = await chrome.storage.local.get(null);
+    const keysToRemove = Object.keys(allItems).filter(key => key !== "token");
+    await chrome.storage.local.remove(keysToRemove);
+    
+    // Hide modal and show auth view
+    const modal = document.getElementById("logoutModal");
+    modal.classList.remove("show");
+    
+    showAuthView();
+    document.getElementById("email").value = "";
+    document.getElementById("password").value = "";
+    document.getElementById("error").textContent = "";
+    document.getElementById("confirmPassword").value = "";
+});
+
+// Close modal when clicking outside (on the backdrop)
+document.getElementById("logoutModal").addEventListener("click", (e) => {
+    if (e.target.id === "logoutModal") {
+        e.target.classList.remove("show");
+    }
+});
+
+
 async function panelopen(){
     const [tab] = await chrome.tabs.query({active:true,currentWindow:true});
     currenttabid = tab.id;
@@ -23,7 +172,7 @@ async function panelopen(){
     });
 }
 
-setTimeout(panelopen,100);
+
 chrome.tabs.onActivated.addListener(async(activeinfo)=>{
     currenttabid = activeinfo.tabId;
     chrome.runtime.sendMessage({
@@ -141,6 +290,7 @@ function restoreTimezoneDropdowns(existing_fields){
         papertz.value = "AoE";
         existing_fields["paper_timezone"] = { value: "AoE" };
     }
+    window.currentConf.existing_fields = existing_fields;
 }
 
 
@@ -370,22 +520,31 @@ kwInput.addEventListener("keydown", (e) => {
 kwInput.addEventListener("input", () => {
     clearTimeout(kwDebounce);
     const q = kwInput.value.trim();
+
     if (q.length < 1) {
         kwSuggestions.innerHTML = "";
         return;
     }
+
     kwDebounce = setTimeout(async () => {
         try {
-            const res = await fetch(`http://localhost:5000/autocomplete/keywords?q=${encodeURIComponent(q)}`);
-            const items = await res.json();
-            kwSuggestions.innerHTML = "";
-            items.filter(item => !keywordsList.includes(item)).forEach(item => {
-                const div = document.createElement("div");
-                div.className = "suggestion-item";
-                div.textContent = item;
-                div.addEventListener("click", () => addKeyword(item));
-                kwSuggestions.appendChild(div);
+            const items = await chrome.runtime.sendMessage({
+                type: "FETCH_KEYWORDS",
+                query: q
             });
+
+            kwSuggestions.innerHTML = "";
+
+            items
+                .filter(item => !keywordsList.includes(item))
+                .forEach(item => {
+                    const div = document.createElement("div");
+                    div.className = "suggestion-item";
+                    div.textContent = item;
+                    div.addEventListener("click", () => addKeyword(item));
+                    kwSuggestions.appendChild(div);
+                });
+
         } catch (err) {
             kwSuggestions.innerHTML = "";
         }
@@ -397,3 +556,19 @@ document.addEventListener("click", (e) => {
         kwSuggestions.innerHTML = "";
     }
 });
+
+chrome.runtime.onMessage.addListener((msg)=>{
+    if(msg.type !== "AUTH_EXPIRED") return;
+    showAuthView();
+    document.getElementById("email").value = "";
+    document.getElementById("password").value = "";
+    document.getElementById("confirmPassword").value = "";
+    document.getElementById("confirmPasswordGroup").style.display = "none";
+    document.getElementById("error").textContent = "Session expired. Please log in again.";
+});
+
+
+
+
+
+initAuth();
