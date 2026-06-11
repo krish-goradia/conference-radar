@@ -7,18 +7,11 @@ export default function ShareModal({ userId, isOpen, onClose }) {
   const shareUrl = `${window.location.origin}/user/${userId}`;
 
   const handleCopy = async () => {
-    try{
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-    catch(err){
-      const input = document.getElementById('share-url');
+    const input = document.getElementById('share-url');
       input.select();
       document.execCommand('copy');
       setCopied(true);
       setTimeout(()=> setCopied(false),2000);
-    }
   };
 
   if (!isOpen) return null;
