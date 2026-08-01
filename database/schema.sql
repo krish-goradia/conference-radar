@@ -5,10 +5,14 @@ CREATE TABLE IF NOT EXISTS users (
     id serial NOT NULL,
     email text NOT NULL,
     password_hash text NOT NULL,
+    public_id uuid DEFAULT gen_random_uuid(),
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT users_pkey PRIMARY KEY (id),
-    CONSTRAINT users_email_key UNIQUE (email)
+    CONSTRAINT users_email_key UNIQUE (email),
+    CONSTRAINT users_public_id_key UNIQUE (public_id)
 );
+
+UPDATE users SET public_id = gen_random_uuid() WHERE public_id IS NULL;
 
 CREATE TABLE IF NOT EXISTS scrape_configs (
     id serial NOT NULL,
@@ -22,7 +26,7 @@ CREATE TABLE IF NOT EXISTS scrape_configs (
     conf_ext_id text NOT NULL,
     abstime_xpath text,
     papertime_xpath text,
-    CONSTRAINT scrape_configs_pkey PRIMARY KEY (id),
+    CONSTRAINT scrape_configs_pkey PRIMARY KEY (id),    
     CONSTRAINT scrape_configs_conf_ext_id_key UNIQUE (conf_ext_id)
 );
 

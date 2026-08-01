@@ -6,7 +6,7 @@
 // }
 
 const BACKEND_ORIGIN = "http://conf-radar.iitgn.ac.in:8080";
-//const BACKEND_ORIGIN = "http://localhost:5000";
+//const BACKEND_ORIGIN = "http://localhost:5001";
 
 async function getConferenceStatefromDB(identifier){
     try{

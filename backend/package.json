@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "chrono-node": "^2.9.0",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
